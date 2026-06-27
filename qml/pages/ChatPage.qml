@@ -25,38 +25,9 @@ Page {
 
         header: PageHeader {
             title: "SailCat"
-            description: settingsManager.modelName
-
-            additionalContent: Row {
-                spacing: Theme.paddingSmall
-
-                Label {
-                    text: qsTr("Model:")
-                    font.pixelSize: Theme.fontSizeExtraSmall
-                    color: Theme.secondaryColor
-                }
-
-                Label {
-                    id: currentModelLabel
-                    text: settingsManager.nextMessageModel !== "" ?
-                          settingsManager.nextMessageModel :
-                          settingsManager.modelName
-                    font.pixelSize: Theme.fontSizeExtraSmall
-                    color: settingsManager.nextMessageModel !== "" ? Theme.highlightColor : Theme.primaryColor
-                }
-
-                IconButton {
-                    id: modelSelectorButton
-                    icon.source: "image://theme/icon-m-more"
-                    flat: true
-                    onClicked: modelSelector.open()
-
-                    ToolTip {
-                        text: qsTr("Change model for next message")
-                        visible: modelSelectorButton.hovered
-                    }
-                }
-            }
+            description: settingsManager.nextMessageModel !== "" ?
+                         settingsManager.nextMessageModel :
+                         settingsManager.modelName
         }
 
         PullDownMenu {
@@ -67,6 +38,10 @@ Page {
             MenuItem {
                 text: qsTr("Settings & About")
                 onClicked: pageStack.push(Qt.resolvedUrl("SettingsPage.qml"))
+            }
+            MenuItem {
+                text: qsTr("Change model for next message")
+                onClicked: modelSelector.open()
             }
             MenuItem {
                 text: qsTr("New conversation")
