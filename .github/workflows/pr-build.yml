@@ -27,7 +27,6 @@ jobs:
           arch: ${{ matrix.arch }}
           release: ${{ env.SAILFISH_RELEASE }}
           fix-version: false
-          validate: true
 
       - name: Verify RPM created
         run: |

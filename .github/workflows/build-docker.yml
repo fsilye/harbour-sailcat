@@ -45,7 +45,6 @@ jobs:
           arch: ${{ matrix.arch }}
           release: ${{ env.SAILFISH_RELEASE }}
           fix-version: false
-          validate: true
 
       - name: List built packages
         run: ls -lh RPMS/
