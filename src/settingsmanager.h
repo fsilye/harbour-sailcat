@@ -24,6 +24,9 @@ public:
     QString modelName() const;
     void setModelName(const QString &model);
 
+    QString nextMessageModel() const;
+    void setNextMessageModel(const QString &model);
+
     bool useCustomKey() const;
     void setUseCustomKey(bool use);
 
