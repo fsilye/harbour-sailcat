@@ -25,9 +25,7 @@ Page {
 
         header: PageHeader {
             title: "SailCat"
-            description: settingsManager.nextMessageModel !== "" ?
-                         settingsManager.nextMessageModel :
-                         settingsManager.modelName
+            description: settingsManager.modelName
         }
 
         PullDownMenu {
