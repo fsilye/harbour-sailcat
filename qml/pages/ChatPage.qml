@@ -26,6 +26,37 @@ Page {
         header: PageHeader {
             title: "SailCat"
             description: settingsManager.modelName
+
+            additionalContent: Row {
+                spacing: Theme.paddingSmall
+
+                Label {
+                    text: qsTr("Model:")
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                    color: Theme.secondaryColor
+                }
+
+                Label {
+                    id: currentModelLabel
+                    text: settingsManager.nextMessageModel !== "" ?
+                          settingsManager.nextMessageModel :
+                          settingsManager.modelName
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                    color: settingsManager.nextMessageModel !== "" ? Theme.highlightColor : Theme.primaryColor
+                }
+
+                IconButton {
+                    id: modelSelectorButton
+                    icon.source: "image://theme/icon-m-more"
+                    flat: true
+                    onClicked: modelSelector.open()
+
+                    ToolTip {
+                        text: qsTr("Change model for next message")
+                        visible: modelSelectorButton.hovered
+                    }
+                }
+            }
         }
 
         PullDownMenu {
@@ -451,8 +482,17 @@ Page {
         var modelName = settingsManager.modelName
         var messages = conversationModel.getMessagesForApi()
 
+        // Use nextMessageModel if set, otherwise use default model
+        var actualModel = settingsManager.nextMessageModel !== "" ?
+                          settingsManager.nextMessageModel :
+                          settingsManager.modelName
+
         conversationModel.addAssistantMessage("")
-        mistralApi.sendMessage(apiKey, modelName, messages)
+        mistralApi.sendMessage(apiKey, actualModel, messages)
+
+        // Reset next message model after sending
+        settingsManager.resetNextMessageModel()
+
         messageListView.positionViewAtEnd()
     }
 
@@ -461,6 +501,15 @@ Page {
         var conversations = conversationManager.getConversationsList()
         for (var i = 0; i < conversations.length; i++) {
             conversationsListModel.append(conversations[i])
+        }
+    }
+
+    ModelSelector {
+        id: modelSelector
+
+        onModelSelected: function(selectedModel) {
+            settingsManager.nextMessageModel = selectedModel
+            remorse.show(qsTr("Model changed to %1 for next message").arg(selectedModel))
         }
     }
 }

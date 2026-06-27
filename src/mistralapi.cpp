@@ -90,6 +90,15 @@ void MistralAPI::sendMessage(const QString &apiKey,
     emit messageSent();
 }
 
+void MistralAPI::sendMessageWithModel(const QString &apiKey,
+                                          const QString &defaultModel,
+                                          const QString &overrideModel,
+                                          const QVariant &messagesVariant)
+{
+    QString actualModel = overrideModel.isEmpty() ? defaultModel : overrideModel;
+    sendMessage(apiKey, actualModel, messagesVariant);
+}
+
 void MistralAPI::generateTitle(const QString &apiKey,
                                  const QString &modelName,
                                  const QString &firstUserMessage)

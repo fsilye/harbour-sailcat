@@ -99,6 +99,25 @@ bool SettingsManager::hasApiKey() const
     return !m_apiKey.isEmpty();
 }
 
+QString SettingsManager::nextMessageModel() const
+{
+    return m_nextMessageModel;
+}
+
+void SettingsManager::setNextMessageModel(const QString &model)
+{
+    if (m_nextMessageModel != model) {
+        m_nextMessageModel = model;
+        saveSettings();
+        emit nextMessageModelChanged();
+    }
+}
+
+void SettingsManager::resetNextMessageModel()
+{
+    setNextMessageModel(QString());
+}
+
 bool SettingsManager::isFirstLaunch() const
 {
     // Show first launch only if:
@@ -137,6 +156,7 @@ void SettingsManager::loadSettings()
 {
     m_apiKey = m_settings.value("apiKey", "").toString();
     m_modelName = m_settings.value("modelName", "mistral-small-latest").toString();
+    m_nextMessageModel = m_settings.value("nextMessageModel", "").toString();
     m_useCustomKey = m_settings.value("useCustomKey", false).toBool();
     m_language = m_settings.value("language", "en").toString();
 }
@@ -145,6 +165,11 @@ void SettingsManager::saveSettings()
 {
     m_settings.setValue("apiKey", m_apiKey);
     m_settings.setValue("modelName", m_modelName);
+    if (!m_nextMessageModel.isEmpty()) {
+        m_settings.setValue("nextMessageModel", m_nextMessageModel);
+    } else {
+        m_settings.remove("nextMessageModel");
+    }
     m_settings.setValue("useCustomKey", m_useCustomKey);
     m_settings.setValue("language", m_language);
     m_settings.sync();

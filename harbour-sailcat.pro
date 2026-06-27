@@ -23,6 +23,7 @@ DISTFILES += qml/harbour-sailcat.qml \
     qml/pages/ConversationDetailPage.qml \
     qml/pages/SettingsPage.qml \
     qml/components/MessageBubble.qml \
+    qml/components/ModelSelector.qml \
     rpm/harbour-sailcat.spec \
     harbour-sailcat.desktop
 

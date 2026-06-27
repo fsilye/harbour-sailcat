@@ -22,6 +22,10 @@ public:
     Q_INVOKABLE void sendMessage(const QString &apiKey,
                                    const QString &modelName,
                                    const QVariant &messages);
+    Q_INVOKABLE void sendMessageWithModel(const QString &apiKey,
+                                          const QString &defaultModel,
+                                          const QString &overrideModel,
+                                          const QVariant &messages);
     Q_INVOKABLE void generateTitle(const QString &apiKey,
                                      const QString &modelName,
                                      const QString &firstUserMessage);
