@@ -1,5 +1,4 @@
 #include "settingsmanager.h"
-#include <QDebug>
 
 SettingsManager::SettingsManager(QObject *parent)
     : QObject(parent)
@@ -120,30 +119,13 @@ void SettingsManager::resetNextMessageModel()
 
 bool SettingsManager::isFirstLaunch() const
 {
-    // Show first launch only if:
-    // - firstLaunchComplete flag is not set (or false)
-    // - OR no API key configured
-
-    bool hasFlag = m_settings.contains("firstLaunchComplete");
-    bool flagValue = m_settings.value("firstLaunchComplete", false).toBool();
-    bool hasKey = !m_apiKey.isEmpty();
-
-    qDebug() << "=== isFirstLaunch DEBUG ===";
-    qDebug() << "  hasFlag:" << hasFlag;
-    qDebug() << "  flagValue:" << flagValue;
-    qDebug() << "  hasKey:" << hasKey;
-    qDebug() << "  m_apiKey:" << m_apiKey;
-
-    // If flag is set and true, never show again
-    if (hasFlag && flagValue) {
-        qDebug() << "  Result: FALSE (flag already set)";
+    // If the flag is set and true, never show again
+    if (m_settings.value("firstLaunchComplete", false).toBool()) {
         return false;
     }
 
-    // Show if no API key (regardless of conversations)
-    bool result = m_apiKey.isEmpty();
-    qDebug() << "  Result:" << (result ? "TRUE" : "FALSE") << "(based on API key)";
-    return result;
+    // Show if no API key configured
+    return m_apiKey.isEmpty();
 }
 
 void SettingsManager::setFirstLaunchComplete()

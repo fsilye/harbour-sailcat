@@ -4,12 +4,19 @@
 #include <QNetworkRequest>
 #include <QDebug>
 
+static const int REQUEST_TIMEOUT_MS = 60000;
+
 MistralAPI::MistralAPI(QObject *parent)
     : QObject(parent)
     , m_networkManager(new QNetworkAccessManager(this))
     , m_currentReply(nullptr)
+    , m_timeoutTimer(new QTimer(this))
     , m_isBusy(false)
+    , m_timedOut(false)
 {
+    m_timeoutTimer->setSingleShot(true);
+    m_timeoutTimer->setInterval(REQUEST_TIMEOUT_MS);
+    connect(m_timeoutTimer, &QTimer::timeout, this, &MistralAPI::onTimeout);
 }
 
 bool MistralAPI::isBusy() const
@@ -56,8 +63,9 @@ void MistralAPI::sendMessage(const QString &apiKey,
     setIsBusy(true);
     setError(QString());
     m_streamBuffer.clear();
+    m_timedOut = false;
 
-    // Construire la requête JSON
+    // Build JSON request
     QJsonObject requestBody;
     requestBody["model"] = modelName;
     requestBody["messages"] = messages;
@@ -66,18 +74,13 @@ void MistralAPI::sendMessage(const QString &apiKey,
     QJsonDocument doc(requestBody);
     QByteArray jsonData = doc.toJson();
 
-    qDebug() << "Sending request to Mistral API";
-    qDebug() << "Model:" << modelName;
-    qDebug() << "Messages count:" << messages.count();
-    qDebug() << "Request body:" << QString::fromUtf8(jsonData);
-
-    // Configurer la requête HTTP
+    // Configure HTTP request
     QNetworkRequest request(QUrl("https://api.mistral.ai/v1/chat/completions"));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Authorization", QString("Bearer %1").arg(apiKey).toUtf8());
     request.setRawHeader("Accept", "text/event-stream");
 
-    // Envoyer la requête
+    // Send request
     m_currentReply = m_networkManager->post(request, jsonData);
 
     connect(m_currentReply, &QNetworkReply::readyRead,
@@ -87,16 +90,9 @@ void MistralAPI::sendMessage(const QString &apiKey,
     connect(m_currentReply, SIGNAL(error(QNetworkReply::NetworkError)),
             this, SLOT(onError(QNetworkReply::NetworkError)));
 
-    emit messageSent();
-}
+    m_timeoutTimer->start();
 
-void MistralAPI::sendMessageWithModel(const QString &apiKey,
-                                          const QString &defaultModel,
-                                          const QString &overrideModel,
-                                          const QVariant &messagesVariant)
-{
-    QString actualModel = overrideModel.isEmpty() ? defaultModel : overrideModel;
-    sendMessage(apiKey, actualModel, messagesVariant);
+    emit messageSent();
 }
 
 void MistralAPI::generateTitle(const QString &apiKey,
@@ -127,8 +123,6 @@ void MistralAPI::generateTitle(const QString &apiKey,
     QJsonDocument doc(requestBody);
     QByteArray jsonData = doc.toJson();
 
-    qDebug() << "Generating title for first message:" << firstUserMessage.left(50);
-
     // Configure HTTP request
     QNetworkRequest request(QUrl("https://api.mistral.ai/v1/chat/completions"));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
@@ -158,10 +152,9 @@ void MistralAPI::onReadyRead()
     if (!m_currentReply)
         return;
 
-    QByteArray data = m_currentReply->readAll();
-    qDebug() << "Received data from API:" << data.size() << "bytes";
-    qDebug() << "Data preview:" << QString::fromUtf8(data.left(200));
-    processStreamData(data);
+    // Restart timeout on activity so long streams are not aborted
+    m_timeoutTimer->start();
+    processStreamData(m_currentReply->readAll());
 }
 
 void MistralAPI::onFinished()
@@ -169,18 +162,14 @@ void MistralAPI::onFinished()
     if (!m_currentReply)
         return;
 
-    qDebug() << "Request finished with status:" << m_currentReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    qDebug() << "Error code:" << m_currentReply->error();
+    m_timeoutTimer->stop();
 
-    // Traiter les données restantes
+    // Process remaining data
     if (m_currentReply->error() == QNetworkReply::NoError) {
         QByteArray remaining = m_currentReply->readAll();
         if (!remaining.isEmpty()) {
-            qDebug() << "Processing remaining data:" << remaining.size() << "bytes";
             processStreamData(remaining);
         }
-    } else {
-        qDebug() << "Request failed:" << m_currentReply->errorString();
     }
 
     m_currentReply->deleteLater();
@@ -192,15 +181,21 @@ void MistralAPI::onFinished()
 
 void MistralAPI::onError(QNetworkReply::NetworkError error)
 {
-    Q_UNUSED(error);
-
     if (!m_currentReply)
         return;
+
+    // User cancellation is not an error; timeout gets its own message
+    if (error == QNetworkReply::OperationCanceledError) {
+        if (m_timedOut) {
+            setError(tr("Request timed out. Please check your connection."));
+        }
+        return;
+    }
 
     QString errorString = m_currentReply->errorString();
     QByteArray responseData = m_currentReply->readAll();
 
-    // Essayer d'extraire un message d'erreur plus détaillé du JSON
+    // Try to extract a more detailed error message from the JSON body
     if (!responseData.isEmpty()) {
         QJsonDocument doc = QJsonDocument::fromJson(responseData);
         if (doc.isObject()) {
@@ -241,17 +236,26 @@ void MistralAPI::setError(const QString &error)
 
 void MistralAPI::processStreamData(const QByteArray &data)
 {
-    m_streamBuffer.append(QString::fromUtf8(data));
+    // Buffer raw bytes: a multi-byte UTF-8 character can be split across
+    // network chunks, so decode only complete lines
+    m_streamBuffer.append(data);
 
-    // Traiter les lignes complètes (terminées par \n)
-    while (m_streamBuffer.contains('\n')) {
-        int newlinePos = m_streamBuffer.indexOf('\n');
-        QString line = m_streamBuffer.left(newlinePos).trimmed();
+    int newlinePos;
+    while ((newlinePos = m_streamBuffer.indexOf('\n')) != -1) {
+        QString line = QString::fromUtf8(m_streamBuffer.left(newlinePos)).trimmed();
         m_streamBuffer.remove(0, newlinePos + 1);
 
         if (!line.isEmpty()) {
             parseStreamLine(line);
         }
+    }
+}
+
+void MistralAPI::onTimeout()
+{
+    if (m_currentReply) {
+        m_timedOut = true;
+        m_currentReply->abort();
     }
 }
 
@@ -284,12 +288,11 @@ void MistralAPI::onTitleGenerationFinished()
                     title = title.left(47) + "...";
                 }
 
-                qDebug() << "Generated title:" << title;
                 emit titleGenerated(title);
             }
         }
     } else {
-        qDebug() << "Title generation failed:" << reply->errorString();
+        qWarning() << "Title generation failed:" << reply->errorString();
     }
 
     reply->deleteLater();
@@ -297,30 +300,26 @@ void MistralAPI::onTitleGenerationFinished()
 
 void MistralAPI::parseStreamLine(const QString &line)
 {
-    // Le format SSE (Server-Sent Events) utilise "data: " comme préfixe
+    // SSE (Server-Sent Events) format uses "data: " as prefix
     if (!line.startsWith("data: ")) {
-        qDebug() << "Line doesn't start with 'data: ':" << line.left(50);
         return;
     }
 
-    QString jsonData = line.mid(6); // Supprimer "data: "
+    QString jsonData = line.mid(6); // Remove "data: "
 
-    // Vérifier si c'est le marqueur de fin
+    // Check for end-of-stream marker
     if (jsonData == "[DONE]") {
-        qDebug() << "Received [DONE] marker";
         return;
     }
 
-    // Parser le JSON
     QJsonDocument doc = QJsonDocument::fromJson(jsonData.toUtf8());
     if (!doc.isObject()) {
-        qDebug() << "Failed to parse JSON:" << jsonData.left(100);
         return;
     }
 
     QJsonObject obj = doc.object();
 
-    // Extraire le contenu du delta
+    // Extract delta content
     QJsonArray choices = obj["choices"].toArray();
     if (!choices.isEmpty()) {
         QJsonObject choice = choices.at(0).toObject();
@@ -329,11 +328,8 @@ void MistralAPI::parseStreamLine(const QString &line)
         if (delta.contains("content")) {
             QString content = delta["content"].toString();
             if (!content.isEmpty()) {
-                qDebug() << "Emitting content:" << content;
                 emit streamingResponse(content);
             }
         }
-    } else {
-        qDebug() << "No choices in response:" << QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
     }
 }

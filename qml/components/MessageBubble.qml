@@ -48,7 +48,11 @@ ListItem {
     function formatMarkdown(text) {
         if (!text) return ""
 
+        // Escape HTML so raw tags in the response cannot be interpreted
         var formatted = text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
 
         // Code blocks (```)
         formatted = formatted.replace(/```([^`]+)```/g, '<pre style="background-color: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px;">$1</pre>')

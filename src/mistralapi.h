@@ -5,6 +5,8 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QString>
+#include <QByteArray>
+#include <QTimer>
 #include <QJsonArray>
 
 class MistralAPI : public QObject
@@ -22,10 +24,6 @@ public:
     Q_INVOKABLE void sendMessage(const QString &apiKey,
                                    const QString &modelName,
                                    const QVariant &messages);
-    Q_INVOKABLE void sendMessageWithModel(const QString &apiKey,
-                                          const QString &defaultModel,
-                                          const QString &overrideModel,
-                                          const QVariant &messages);
     Q_INVOKABLE void generateTitle(const QString &apiKey,
                                      const QString &modelName,
                                      const QString &firstUserMessage);
@@ -45,13 +43,16 @@ private slots:
     void onFinished();
     void onError(QNetworkReply::NetworkError error);
     void onTitleGenerationFinished();
+    void onTimeout();
 
 private:
     QNetworkAccessManager *m_networkManager;
     QNetworkReply *m_currentReply;
+    QTimer *m_timeoutTimer;
     bool m_isBusy;
+    bool m_timedOut;
     QString m_error;
-    QString m_streamBuffer;
+    QByteArray m_streamBuffer;
 
     void setIsBusy(bool busy);
     void setError(const QString &error);

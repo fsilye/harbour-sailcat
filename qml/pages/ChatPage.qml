@@ -9,6 +9,7 @@ Page {
 
     property bool firstUse: false
     property string streamingContent: ""
+    property bool autoScroll: true
 
     SilicaListView {
         id: messageListView
@@ -22,6 +23,11 @@ Page {
 
         model: conversationModel
         spacing: Theme.paddingMedium
+
+        // Stop following the stream when the user scrolls away,
+        // resume when they come back to the bottom
+        onMovementStarted: chatPage.autoScroll = false
+        onMovementEnded: chatPage.autoScroll = messageListView.atYEnd
 
         header: PageHeader {
             title: "SailCat"
@@ -378,6 +384,9 @@ Page {
         onStreamingResponse: {
             streamingContent += content
             conversationModel.updateLastAssistantMessage(streamingContent)
+            if (chatPage.autoScroll) {
+                messageListView.positionViewAtEnd()
+            }
         }
 
         onMessageSent: {
@@ -386,7 +395,13 @@ Page {
 
         onResponseCompleted: {
             streamingContent = ""
-            messageListView.positionViewAtEnd()
+
+            // Drop the empty assistant bubble left behind by an error or cancel
+            conversationModel.removeLastMessageIfEmpty()
+
+            if (chatPage.autoScroll) {
+                messageListView.positionViewAtEnd()
+            }
             conversationManager.saveCurrentConversation()
 
             // Generate title after first exchange (2 messages: user + assistant)
@@ -416,15 +431,8 @@ Page {
         refreshConversationsList()
 
         // Show first launch dialog after a short delay to let PageStack settle
-        console.log("ChatPage.onCompleted: Checking if first launch...")
-        var shouldShow = settingsManager.isFirstLaunch()
-        console.log("ChatPage.onCompleted: isFirstLaunch returned:", shouldShow)
-
-        if (shouldShow) {
-            console.log("ChatPage.onCompleted: Will open first launch dialog after delay")
+        if (settingsManager.isFirstLaunch()) {
             firstLaunchTimer.start()
-        } else {
-            console.log("ChatPage.onCompleted: Not showing first launch dialog")
         }
     }
 
@@ -432,10 +440,7 @@ Page {
         id: firstLaunchTimer
         interval: 500
         repeat: false
-        onTriggered: {
-            console.log("Timer: Opening first launch dialog now")
-            firstLaunchDialog.open()
-        }
+        onTriggered: firstLaunchDialog.open()
     }
 
     function sendMessage() {
@@ -449,10 +454,10 @@ Page {
 
         messageInput.text = ""
         messageInput.focus = false
+        autoScroll = true
         conversationModel.addUserMessage(message)
 
         var apiKey = settingsManager.apiKey
-        var modelName = settingsManager.modelName
         var messages = conversationModel.getMessagesForApi()
 
         // Use nextMessageModel if set, otherwise use default model

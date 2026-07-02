@@ -40,12 +40,12 @@ QHash<int, QByteArray> ConversationModel::roleNames() const
     return roles;
 }
 
-void ConversationModel::addUserMessage(const QString &content)
+void ConversationModel::addMessage(const QString &role, const QString &content, qint64 timestamp)
 {
     Message msg;
-    msg.role = "user";
+    msg.role = role;
     msg.content = content;
-    msg.timestamp = QDateTime::currentMSecsSinceEpoch();
+    msg.timestamp = timestamp;
 
     beginInsertRows(QModelIndex(), m_messages.count(), m_messages.count());
     m_messages.append(msg);
@@ -54,18 +54,14 @@ void ConversationModel::addUserMessage(const QString &content)
     emit countChanged();
 }
 
+void ConversationModel::addUserMessage(const QString &content)
+{
+    addMessage("user", content, QDateTime::currentMSecsSinceEpoch());
+}
+
 void ConversationModel::addAssistantMessage(const QString &content)
 {
-    Message msg;
-    msg.role = "assistant";
-    msg.content = content;
-    msg.timestamp = QDateTime::currentMSecsSinceEpoch();
-
-    beginInsertRows(QModelIndex(), m_messages.count(), m_messages.count());
-    m_messages.append(msg);
-    endInsertRows();
-
-    emit countChanged();
+    addMessage("assistant", content, QDateTime::currentMSecsSinceEpoch());
 }
 
 void ConversationModel::updateLastAssistantMessage(const QString &content)
@@ -85,6 +81,23 @@ void ConversationModel::updateLastAssistantMessage(const QString &content)
     m_messages[lastIndex].content = content;
     QModelIndex index = createIndex(lastIndex, 0);
     emit dataChanged(index, index, {ContentRole});
+}
+
+void ConversationModel::removeLastMessageIfEmpty()
+{
+    if (m_messages.isEmpty())
+        return;
+
+    int lastIndex = m_messages.count() - 1;
+    const Message &last = m_messages.at(lastIndex);
+
+    if (last.role == "assistant" && last.content.isEmpty()) {
+        beginRemoveRows(QModelIndex(), lastIndex, lastIndex);
+        m_messages.removeAt(lastIndex);
+        endRemoveRows();
+
+        emit countChanged();
+    }
 }
 
 void ConversationModel::clearConversation()
@@ -128,6 +141,7 @@ QJsonArray ConversationModel::toJsonArray() const
         QJsonObject msgObj;
         msgObj["role"] = msg.role;
         msgObj["content"] = msg.content;
+        msgObj["timestamp"] = msg.timestamp;
         messages.append(msgObj);
     }
 
