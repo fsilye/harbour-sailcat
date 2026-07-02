@@ -8,8 +8,6 @@ Dialog {
 
     canAccept: apiKeyField.text.trim().length > 0 || !useCustomKeySwitch.checked
 
-    property var stats: conversationManager.getStatistics()
-
     onAccepted: {
         if (useCustomKeySwitch.checked) {
             settingsManager.apiKey = apiKeyField.text.trim()
@@ -73,56 +71,25 @@ Dialog {
                 text: qsTr("Statistics")
             }
 
-            Column {
+            BackgroundItem {
                 width: parent.width
-                spacing: Theme.paddingSmall
 
-                DetailItem {
-                    label: qsTr("Total messages")
-                    value: stats.totalMessages || "0"
+                onClicked: pageStack.push(Qt.resolvedUrl("StatsPage.qml"))
+
+                Label {
+                    x: Theme.horizontalPageMargin
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: qsTr("View statistics")
+                    color: parent.highlighted ? Theme.highlightColor : Theme.primaryColor
                 }
 
-                DetailItem {
-                    label: qsTr("Messages sent")
-                    value: stats.totalUserMessages || "0"
-                }
-
-                DetailItem {
-                    label: qsTr("Messages received")
-                    value: stats.totalAssistantMessages || "0"
-                }
-
-                DetailItem {
-                    label: qsTr("Conversations")
-                    value: stats.totalConversations || "0"
-                }
-
-                DetailItem {
-                    label: qsTr("Estimated tokens used")
-                    value: (stats.estimatedTokens || 0).toLocaleString(Qt.locale(), 'f', 0)
-                    visible: stats.estimatedTokens > 0
-                }
-
-                DetailItem {
-                    label: qsTr("Longest conversation")
-                    value: stats.longestConvTitle ? stats.longestConvTitle + " (" + stats.longestConvMessages + ")" : qsTr("None")
-                    visible: stats.longestConvMessages > 0
-                }
-
-                DetailItem {
-                    label: qsTr("Longest message")
-                    value: qsTr("%n character(s)", "", stats.longestMessageLength || 0)
-                    visible: stats.longestMessageLength > 0
-                }
-
-                DetailItem {
-                    label: qsTr("First message")
-                    value: stats.firstMessageDate > 0 ? Qt.formatDateTime(new Date(stats.firstMessageDate), "dd/MM/yyyy") : qsTr("Never")
-                }
-
-                DetailItem {
-                    label: qsTr("Storage used")
-                    value: conversationManager.getStorageSizeFormatted()
+                Icon {
+                    anchors {
+                        right: parent.right
+                        rightMargin: Theme.horizontalPageMargin
+                        verticalCenter: parent.verticalCenter
+                    }
+                    source: "image://theme/icon-m-right"
                 }
             }
 

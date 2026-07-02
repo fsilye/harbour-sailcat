@@ -1,5 +1,6 @@
 #include "conversationmanager.h"
 #include <QDateTime>
+#include <QVector>
 #include <QUuid>
 #include <QJsonDocument>
 #include <QDebug>
@@ -67,13 +68,9 @@ void ConversationManager::loadConversation(const QString &conversationId)
     m_currentConversationId = conversationId;
     m_currentConversation->clearConversation();
 
-    // Charger les messages
+    // Load messages preserving their original timestamps
     for (const Message &msg : conv->messages) {
-        if (msg.role == "user") {
-            m_currentConversation->addUserMessage(msg.content);
-        } else {
-            m_currentConversation->addAssistantMessage(msg.content);
-        }
+        m_currentConversation->addMessage(msg.role, msg.content, msg.timestamp);
     }
 
     m_settings.setValue("lastConversationId", m_currentConversationId);
@@ -144,7 +141,7 @@ void ConversationManager::saveCurrentConversation()
     if (!conv)
         return;
 
-    // Récupérer les messages du modèle
+    // Collect messages from the model
     conv->messages.clear();
     QJsonArray messagesJson = m_currentConversation->toJsonArray();
 
@@ -153,7 +150,7 @@ void ConversationManager::saveCurrentConversation()
         Message msg;
         msg.role = msgObj["role"].toString();
         msg.content = msgObj["content"].toString();
-        msg.timestamp = QDateTime::currentMSecsSinceEpoch();
+        msg.timestamp = msgObj["timestamp"].toVariant().toLongLong();
         conv->messages.append(msg);
     }
 
@@ -332,6 +329,11 @@ QVariantMap ConversationManager::getStatistics() const
     qint64 firstMessageDate = 0;
     QString longestConvTitle;
 
+    // Activity distribution: last 14 days (oldest first) and hour of day
+    QDate today = QDate::currentDate();
+    QVector<int> dayCounts(14, 0);
+    QVector<int> hourCounts(24, 0);
+
     for (const Conversation &conv : m_conversations) {
         int convMessageCount = conv.messages.count();
         totalMessages += convMessageCount;
@@ -360,7 +362,27 @@ QVariantMap ConversationManager::getStatistics() const
             if (firstMessageDate == 0 || msg.timestamp < firstMessageDate) {
                 firstMessageDate = msg.timestamp;
             }
+
+            // Activity distribution
+            if (msg.timestamp > 0) {
+                QDateTime dt = QDateTime::fromMSecsSinceEpoch(msg.timestamp);
+                int daysAgo = dt.date().daysTo(today);
+                if (daysAgo >= 0 && daysAgo < 14) {
+                    dayCounts[13 - daysAgo]++;
+                }
+                hourCounts[dt.time().hour()]++;
+            }
         }
+    }
+
+    QVariantList messagesPerDay;
+    for (int i = 0; i < 14; ++i) {
+        messagesPerDay.append(dayCounts.at(i));
+    }
+
+    QVariantList messagesPerHour;
+    for (int i = 0; i < 24; ++i) {
+        messagesPerHour.append(hourCounts.at(i));
     }
 
     stats["totalMessages"] = totalMessages;
@@ -372,6 +394,8 @@ QVariantMap ConversationManager::getStatistics() const
     stats["longestMessageLength"] = longestMessageLength;
     stats["estimatedTokens"] = estimatedTokens;
     stats["firstMessageDate"] = firstMessageDate;
+    stats["messagesPerDay"] = messagesPerDay;
+    stats["messagesPerHour"] = messagesPerHour;
 
     return stats;
 }
