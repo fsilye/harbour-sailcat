@@ -4,10 +4,14 @@
 #include <QNetworkRequest>
 #include <QDebug>
 
+#ifndef APP_VERSION
+#define APP_VERSION "1.9.6"
+#endif
+
 UpdateChecker::UpdateChecker(QObject *parent)
     : QObject(parent)
     , m_networkManager(new QNetworkAccessManager(this))
-    , m_currentVersion("1.9.5")
+    , m_currentVersion(APP_VERSION)
     , m_updateAvailable(false)
     , m_checking(false)
 {

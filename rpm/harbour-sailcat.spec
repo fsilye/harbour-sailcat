@@ -1,6 +1,6 @@
 Name:       harbour-sailcat
 Summary:    Le Chat de Mistral AI pour Sailfish OS
-Version:    1.9.5
+Version:    1.9.6
 Release:    1
 Group:      Applications/Internet
 License:    MIT
@@ -31,7 +31,7 @@ Fonctionnalités:
 %setup -q -n %{name}-%{version}
 
 %build
-%qmake5
+%qmake5 "VERSION=%{version}"
 
 make %{?_smp_mflags}
 
