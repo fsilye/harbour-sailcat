@@ -70,6 +70,7 @@ Page {
             isLast: index === messageListView.count - 1
 
             onRegenerateRequested: chatPage.regenerateLastResponse()
+            onEditRequested: chatPage.editMessage(index, model.content)
         }
 
         VerticalScrollDecorator {}
@@ -484,6 +485,16 @@ Page {
         settingsManager.resetNextMessageModel()
 
         messageListView.positionViewAtEnd()
+    }
+
+    function editMessage(index, content) {
+        if (mistralApi.isBusy) return
+
+        conversationModel.truncateFrom(index)
+        // Save immediately so a close before resending does not restore the removed tail
+        conversationManager.saveCurrentConversation()
+        messageInput.text = content
+        messageInput.focus = true
     }
 
     function regenerateLastResponse() {

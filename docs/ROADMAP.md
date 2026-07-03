@@ -18,7 +18,7 @@ Status legend: `todo` / `in progress` / `done`
 | # | Feature | Spec | Status |
 |---|---------|------|--------|
 | 05 | Regenerate last response | [05-regenerate-response.md](features/05-regenerate-response.md) | done (v1.9.11) |
-| 06 | Edit user message & resend | [06-edit-message.md](features/06-edit-message.md) | todo |
+| 06 | Edit user message & resend | [06-edit-message.md](features/06-edit-message.md) | done (v1.9.12) |
 | 07 | Export conversation | [07-export-conversation.md](features/07-export-conversation.md) | todo |
 | 08 | Copy code block | [08-copy-code-block.md](features/08-copy-code-block.md) | todo |
 

@@ -116,6 +116,20 @@ void ConversationModel::removeLastAssistantMessage()
     emit countChanged();
 }
 
+void ConversationModel::truncateFrom(int index)
+{
+    if (index < 0 || index >= m_messages.count())
+        return;
+
+    beginRemoveRows(QModelIndex(), index, m_messages.count() - 1);
+    while (m_messages.count() > index) {
+        m_messages.removeLast();
+    }
+    endRemoveRows();
+
+    emit countChanged();
+}
+
 void ConversationModel::clearConversation()
 {
     beginResetModel();

@@ -11,6 +11,7 @@ ListItem {
     property bool isLast: false
 
     signal regenerateRequested()
+    signal editRequested()
 
     menu: ContextMenu {
         MenuItem {
@@ -18,6 +19,11 @@ ListItem {
             onClicked: {
                 Clipboard.text = messageItem.content
             }
+        }
+        MenuItem {
+            text: qsTr("Edit")
+            visible: messageItem.role === "user" && !mistralApi.isBusy
+            onClicked: messageItem.editRequested()
         }
         MenuItem {
             text: qsTr("Regenerate")
