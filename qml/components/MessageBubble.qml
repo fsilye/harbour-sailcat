@@ -21,6 +21,13 @@ ListItem {
             }
         }
         MenuItem {
+            text: qsTr("Copy code")
+            visible: messageItem.content.indexOf("```") !== -1
+            onClicked: {
+                Clipboard.text = extractCodeBlocks(messageItem.content)
+            }
+        }
+        MenuItem {
             text: qsTr("Edit")
             visible: messageItem.role === "user" && !mistralApi.isBusy
             onClicked: messageItem.editRequested()
@@ -59,6 +66,24 @@ ListItem {
         onLinkActivated: Qt.openUrlExternally(link)
     }
 
+    function extractCodeBlocks(text) {
+        if (!text) return ""
+
+        var blocks = []
+        var re = /```[a-zA-Z0-9+#-]*\n?([\s\S]*?)```/g
+        var m
+        while ((m = re.exec(text)) !== null) {
+            var code = m[1]
+            if (code.charAt(code.length - 1) === '\n') {
+                code = code.slice(0, -1)
+            }
+            if (code.length > 0) {
+                blocks.push(code)
+            }
+        }
+        return blocks.join("\n\n")
+    }
+
     function formatMarkdown(text) {
         if (!text) return ""
 
@@ -68,8 +93,8 @@ ListItem {
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
 
-        // Code blocks (```)
-        formatted = formatted.replace(/```([^`]+)```/g, '<pre style="background-color: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px;">$1</pre>')
+        // Code blocks (```), stripping the optional language tag
+        formatted = formatted.replace(/```[a-zA-Z0-9+#-]*\n?([\s\S]*?)```/g, '<pre style="background-color: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px;">$1</pre>')
 
         // Inline code (`)
         formatted = formatted.replace(/`([^`]+)`/g, '<code style="background-color: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 2px;">$1</code>')
