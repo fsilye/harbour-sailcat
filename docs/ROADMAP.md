@@ -11,7 +11,7 @@ Status legend: `todo` / `in progress` / `done`
 | 01 | Generation parameters (temperature, max_tokens) | [01-generation-parameters.md](features/01-generation-parameters.md) | done (v1.9.7) |
 | 02 | System prompt / personas | [02-system-prompt.md](features/02-system-prompt.md) | done (v1.9.8) |
 | 03 | Token usage tracking | [03-token-usage.md](features/03-token-usage.md) | done (v1.9.9) |
-| 04 | Dynamic model list from API | [04-dynamic-model-list.md](features/04-dynamic-model-list.md) | todo |
+| 04 | Dynamic model list from API | [04-dynamic-model-list.md](features/04-dynamic-model-list.md) | done (v1.9.10) |
 
 ## Phase 2 — Chat UX
 

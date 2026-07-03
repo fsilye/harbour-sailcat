@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QSettings>
 #include <QString>
+#include <QStringList>
+#include <QVariant>
 
 class SettingsManager : public QObject
 {
@@ -49,6 +51,9 @@ public:
 
     Q_INVOKABLE QStringList availableModels() const;
     Q_INVOKABLE QStringList availableLanguages() const;
+    Q_INVOKABLE bool isVisionModel(const QString &modelId) const;
+    Q_INVOKABLE void updateModelCache(const QVariantList &models);
+    Q_INVOKABLE bool modelCacheStale() const;
     Q_INVOKABLE void clearApiKey();
     Q_INVOKABLE bool isFirstLaunch() const;
     Q_INVOKABLE void setFirstLaunchComplete();
@@ -64,6 +69,7 @@ signals:
     void temperatureChanged();
     void maxTokensChanged();
     void systemPromptChanged();
+    void availableModelsChanged();
 
 private:
     QSettings m_settings;
@@ -75,6 +81,8 @@ private:
     double m_temperature;
     int m_maxTokens;
     QString m_systemPrompt;
+    QStringList m_cachedModels;
+    QStringList m_cachedVisionModels;
 
     void loadSettings();
     void saveSettings();

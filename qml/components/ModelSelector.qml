@@ -7,6 +7,25 @@ Dialog {
 
     property var onModelSelected: function(model) {}
 
+    function prettyModelName(id) {
+        var parts = id.replace(/-latest$/, "").split("-")
+        for (var i = 0; i < parts.length; i++) {
+            parts[i] = parts[i].charAt(0).toUpperCase() + parts[i].slice(1)
+        }
+        return parts.join(" ")
+    }
+
+    Component.onCompleted: {
+        var models = settingsManager.availableModels()
+        for (var i = 0; i < models.length; i++) {
+            modelListModel.append({
+                name: prettyModelName(models[i]),
+                value: models[i],
+                desc: settingsManager.isVisionModel(models[i]) ? qsTr("Vision capable") : ""
+            })
+        }
+    }
+
     DialogHeader {
         title: qsTr("Select Model")
     }
@@ -16,9 +35,6 @@ Dialog {
 
         ListModel {
             id: modelListModel
-            ListElement { name: qsTr("Mistral Small (Recommended)"); value: "mistral-small-latest"; desc: qsTr("Balanced model between performance and speed") }
-            ListElement { name: qsTr("Mistral Large"); value: "mistral-large-latest"; desc: qsTr("Most powerful for complex tasks") }
-            ListElement { name: qsTr("Pixtral 12B (Vision)"); value: "pixtral-12b-latest"; desc: qsTr("Model with image support") }
         }
 
         ListView {

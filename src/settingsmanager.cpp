@@ -1,4 +1,5 @@
 #include "settingsmanager.h"
+#include <QDateTime>
 
 SettingsManager::SettingsManager(QObject *parent)
     : QObject(parent)
@@ -115,10 +116,62 @@ void SettingsManager::setSystemPrompt(const QString &prompt)
 
 QStringList SettingsManager::availableModels() const
 {
+    if (!m_cachedModels.isEmpty()) {
+        return m_cachedModels;
+    }
+    // Fallback when the model list was never fetched
     return QStringList()
         << "mistral-small-latest"
         << "mistral-large-latest"
         << "pixtral-12b-latest";
+}
+
+bool SettingsManager::isVisionModel(const QString &modelId) const
+{
+    if (!m_cachedModels.isEmpty()) {
+        return m_cachedVisionModels.contains(modelId);
+    }
+    return modelId.contains("pixtral");
+}
+
+void SettingsManager::updateModelCache(const QVariantList &models)
+{
+    QStringList ids;
+    QStringList visionIds;
+
+    for (const QVariant &modelVariant : models) {
+        QVariantMap model = modelVariant.toMap();
+        QString id = model["id"].toString();
+        if (id.isEmpty()) {
+            continue;
+        }
+        ids.append(id);
+        if (model["vision"].toBool()) {
+            visionIds.append(id);
+        }
+    }
+
+    if (ids.isEmpty()) {
+        return;
+    }
+
+    m_cachedModels = ids;
+    m_cachedVisionModels = visionIds;
+    m_settings.setValue("models/cachedList", m_cachedModels);
+    m_settings.setValue("models/visionList", m_cachedVisionModels);
+    m_settings.setValue("models/cacheTimestamp", QDateTime::currentMSecsSinceEpoch() / 1000);
+    m_settings.sync();
+    emit availableModelsChanged();
+}
+
+bool SettingsManager::modelCacheStale() const
+{
+    if (m_cachedModels.isEmpty()) {
+        return true;
+    }
+    qint64 cachedAt = m_settings.value("models/cacheTimestamp", 0).toLongLong();
+    qint64 now = QDateTime::currentMSecsSinceEpoch() / 1000;
+    return (now - cachedAt) > 24 * 3600;
 }
 
 QStringList SettingsManager::availableLanguages() const
@@ -188,6 +241,8 @@ void SettingsManager::loadSettings()
     m_temperature = m_settings.value("generation/temperature", -1.0).toDouble();
     m_maxTokens = m_settings.value("generation/maxTokens", 0).toInt();
     m_systemPrompt = m_settings.value("generation/systemPrompt", "").toString();
+    m_cachedModels = m_settings.value("models/cachedList").toStringList();
+    m_cachedVisionModels = m_settings.value("models/visionList").toStringList();
 }
 
 void SettingsManager::saveSettings()

@@ -6,6 +6,8 @@ Dialog {
 
     allowedOrientations: Orientation.All
 
+    property var availableModelsList: settingsManager.availableModels()
+
     canAccept: apiKeyField.text.trim().length > 0 || !useCustomKeySwitch.checked
 
     onAccepted: {
@@ -213,35 +215,30 @@ Dialog {
 
                 menu: ContextMenu {
                     Repeater {
-                        model: [
-                            { name: qsTr("Mistral Small (Recommended)"), value: "mistral-small-latest" },
-                            { name: qsTr("Mistral Large"), value: "mistral-large-latest" },
-                            { name: qsTr("Pixtral 12B (Vision)"), value: "pixtral-12b-latest" }
-                        ]
+                        model: settingsPage.availableModelsList
 
                         MenuItem {
-                            text: modelData.name
-                            property string modelValue: modelData.value
+                            text: prettyModelName(modelData)
+                            property string modelValue: modelData
                         }
                     }
                 }
 
-                Component.onCompleted: {
-                    var currentModel = settingsManager.modelName
-                    var models = ["mistral-small-latest", "mistral-large-latest", "pixtral-12b-latest"]
-                    var index = models.indexOf(currentModel)
-                    if (index >= 0) {
-                        currentIndex = index
-                    } else {
-                        currentIndex = 0
-                    }
+                function selectCurrentModel() {
+                    var index = settingsPage.availableModelsList.indexOf(settingsManager.modelName)
+                    currentIndex = index >= 0 ? index : 0
                 }
+
+                Component.onCompleted: selectCurrentModel()
             }
 
             Label {
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2 * Theme.horizontalPageMargin
-                text: getModelDescription()
+                text: modelComboBox.currentItem &&
+                      settingsManager.isVisionModel(modelComboBox.currentItem.modelValue)
+                      ? qsTr("This model can analyze images") : ""
+                visible: text !== ""
                 font.pixelSize: Theme.fontSizeExtraSmall
                 color: Theme.secondaryColor
                 wrapMode: Text.WordWrap
@@ -419,17 +416,27 @@ Dialog {
         id: remorse
     }
 
-    function getModelDescription() {
-        var index = modelComboBox.currentIndex
-        switch(index) {
-        case 0:
-            return qsTr("Balanced model between performance and speed. Ideal for most conversations.")
-        case 1:
-            return qsTr("Most powerful model for complex tasks. Requires more API credits.")
-        case 2:
-            return qsTr("Model with image support. Can analyze and understand images.")
-        default:
-            return ""
+    Connections {
+        target: mistralApi
+
+        onModelsFetched: {
+            settingsManager.updateModelCache(models)
+            settingsPage.availableModelsList = settingsManager.availableModels()
+            modelComboBox.selectCurrentModel()
         }
+    }
+
+    Component.onCompleted: {
+        if (settingsManager.hasApiKey && settingsManager.modelCacheStale()) {
+            mistralApi.fetchModels(settingsManager.apiKey)
+        }
+    }
+
+    function prettyModelName(id) {
+        var parts = id.replace(/-latest$/, "").split("-")
+        for (var i = 0; i < parts.length; i++) {
+            parts[i] = parts[i].charAt(0).toUpperCase() + parts[i].slice(1)
+        }
+        return parts.join(" ")
     }
 }

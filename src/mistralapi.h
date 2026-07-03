@@ -8,6 +8,7 @@
 #include <QByteArray>
 #include <QTimer>
 #include <QJsonArray>
+#include <QVariant>
 
 class MistralAPI : public QObject
 {
@@ -29,6 +30,7 @@ public:
     Q_INVOKABLE void generateTitle(const QString &apiKey,
                                      const QString &modelName,
                                      const QString &firstUserMessage);
+    Q_INVOKABLE void fetchModels(const QString &apiKey);
     Q_INVOKABLE void cancelRequest();
     Q_INVOKABLE void clearError();
 
@@ -40,12 +42,15 @@ signals:
     void responseCompleted();
     void messageSent();
     void titleGenerated(const QString &title);
+    void modelsFetched(const QVariantList &models);
+    void modelsFetchFailed();
 
 private slots:
     void onReadyRead();
     void onFinished();
     void onError(QNetworkReply::NetworkError error);
     void onTitleGenerationFinished();
+    void onModelsFetchFinished();
     void onTimeout();
 
 private:

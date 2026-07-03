@@ -3,6 +3,8 @@
 #include <QJsonObject>
 #include <QNetworkRequest>
 #include <QDebug>
+#include <QStringList>
+#include <algorithm>
 
 static const int REQUEST_TIMEOUT_MS = 60000;
 
@@ -143,6 +145,22 @@ void MistralAPI::generateTitle(const QString &apiKey,
 
     connect(reply, &QNetworkReply::finished,
             this, &MistralAPI::onTitleGenerationFinished);
+}
+
+void MistralAPI::fetchModels(const QString &apiKey)
+{
+    if (apiKey.isEmpty()) {
+        emit modelsFetchFailed();
+        return;
+    }
+
+    QNetworkRequest request(QUrl("https://api.mistral.ai/v1/models"));
+    request.setRawHeader("Authorization", QString("Bearer %1").arg(apiKey).toUtf8());
+
+    QNetworkReply *reply = m_networkManager->get(request);
+
+    connect(reply, &QNetworkReply::finished,
+            this, &MistralAPI::onModelsFetchFinished);
 }
 
 void MistralAPI::cancelRequest()
@@ -306,6 +324,64 @@ void MistralAPI::onTitleGenerationFinished()
     }
 
     reply->deleteLater();
+}
+
+void MistralAPI::onModelsFetchFinished()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
+    if (!reply)
+        return;
+
+    reply->deleteLater();
+
+    if (reply->error() != QNetworkReply::NoError) {
+        qWarning() << "Models fetch failed:" << reply->errorString();
+        emit modelsFetchFailed();
+        return;
+    }
+
+    QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+    if (!doc.isObject()) {
+        emit modelsFetchFailed();
+        return;
+    }
+
+    QJsonArray data = doc.object()["data"].toArray();
+    QStringList ids;
+    QVariantList models;
+
+    for (const QJsonValue &value : data) {
+        QJsonObject modelObj = value.toObject();
+        QString id = modelObj["id"].toString();
+        QJsonObject caps = modelObj["capabilities"].toObject();
+
+        // Keep only current chat models; dated aliases add noise
+        if (!caps["completion_chat"].toBool() || !id.endsWith("-latest")) {
+            continue;
+        }
+        if (ids.contains(id)) {
+            continue;
+        }
+        ids.append(id);
+
+        QVariantMap entry;
+        entry["id"] = id;
+        entry["vision"] = caps["vision"].toBool();
+        models.append(entry);
+    }
+
+    if (models.isEmpty()) {
+        emit modelsFetchFailed();
+        return;
+    }
+
+    // Sort alphabetically by id
+    std::sort(models.begin(), models.end(),
+              [](const QVariant &a, const QVariant &b) {
+        return a.toMap()["id"].toString() < b.toMap()["id"].toString();
+    });
+
+    emit modelsFetched(models);
 }
 
 void MistralAPI::parseStreamLine(const QString &line)
