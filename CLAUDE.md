@@ -157,7 +157,7 @@ journalctl -f | grep sailcat
 ### CI/CD Workflows
 - **build-docker.yml** - Triggered on `v*.*.*` tags or manual dispatch
   - Extracts version from `GITHUB_REF` (e.g., `refs/tags/v1.0.0` → `1.0.0`)
-  - Uses `0.1.0-dev` for manual builds without tags
+  - Uses `0.1.0` for manual builds without tags (RPM forbids `-` in Version)
   - Updates `rpm/harbour-sailcat.spec` with extracted version
   - Builds for armv7hl, aarch64, i486 in parallel
   - Creates GitHub release with changelog (tag builds only)
