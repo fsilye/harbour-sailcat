@@ -44,6 +44,13 @@ Page {
         model: conversationModel
         spacing: Theme.paddingMedium
 
+        add: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 300; easing.type: Easing.OutQuad }
+                NumberAnimation { property: "scale"; from: 0.92; to: 1; duration: 300; easing.type: Easing.OutBack }
+            }
+        }
+
         // Stop following the stream when the user scrolls away,
         // resume when they come back to the bottom
         onMovementStarted: chatPage.autoScroll = false
@@ -221,10 +228,51 @@ Page {
             }
         }
 
-        Separator {
+        // Separator with a scanning light while a response is streaming
+        Item {
+            id: separatorArea
             width: parent.width
-            color: Theme.highlightColor
-            opacity: 0.3
+            height: Theme.paddingSmall
+
+            Separator {
+                width: parent.width
+                anchors.verticalCenter: parent.verticalCenter
+                color: Theme.highlightColor
+                opacity: 0.3
+            }
+
+            Rectangle {
+                id: scanGlow
+                visible: mistralApi.isBusy
+                width: separatorArea.width / 3
+                height: Theme.paddingSmall / 2
+                radius: height / 2
+                anchors.verticalCenter: parent.verticalCenter
+                color: Theme.highlightColor
+                opacity: 0.25
+                x: scanLine.x - (width - scanLine.width) / 2
+            }
+
+            Rectangle {
+                id: scanLine
+                visible: mistralApi.isBusy
+                width: separatorArea.width / 5
+                height: 2
+                radius: 1
+                anchors.verticalCenter: parent.verticalCenter
+                color: Theme.highlightColor
+
+                SequentialAnimation on x {
+                    running: mistralApi.isBusy
+                    loops: Animation.Infinite
+                    NumberAnimation {
+                        from: -scanLine.width
+                        to: separatorArea.width
+                        duration: 1100
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+            }
         }
 
         // Input row
@@ -260,6 +308,41 @@ Page {
                         ? "image://theme/icon-m-pause"
                         : "image://theme/icon-m-message"
                     enabled: (!mistralApi.isBusy && messageInput.text.trim().length > 0 && settingsManager.hasApiKey) || mistralApi.isBusy
+
+                    // Pulsing halo while a request is in flight
+                    Rectangle {
+                        id: busyHalo
+                        anchors.centerIn: parent
+                        width: parent.width
+                        height: width
+                        radius: width / 2
+                        color: "transparent"
+                        border.color: Theme.highlightColor
+                        border.width: 2
+                        visible: mistralApi.isBusy
+                        z: -1
+
+                        ParallelAnimation {
+                            running: mistralApi.isBusy
+                            loops: Animation.Infinite
+
+                            NumberAnimation {
+                                target: busyHalo
+                                property: "scale"
+                                from: 0.6
+                                to: 1.25
+                                duration: 900
+                                easing.type: Easing.OutQuad
+                            }
+                            NumberAnimation {
+                                target: busyHalo
+                                property: "opacity"
+                                from: 0.7
+                                to: 0
+                                duration: 900
+                            }
+                        }
+                    }
 
                     onClicked: {
                         if (mistralApi.isBusy) {

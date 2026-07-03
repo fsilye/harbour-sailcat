@@ -32,6 +32,7 @@ DISTFILES += qml/harbour-sailcat.qml \
     qml/pages/StatsPage.qml \
     qml/components/MessageBubble.qml \
     qml/components/ModelSelector.qml \
+    qml/components/TypingIndicator.qml \
     rpm/harbour-sailcat.spec \
     harbour-sailcat.desktop
 

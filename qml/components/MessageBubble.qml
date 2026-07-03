@@ -113,11 +113,10 @@ ListItem {
     }
 
     // Streaming placeholder shown inside the pending assistant bubble
-    BusyIndicator {
+    TypingIndicator {
         id: busyIndicator
         visible: role === "assistant" && content === "" && mistralApi.isBusy
         running: visible
-        size: BusyIndicatorSize.ExtraSmall
         anchors {
             left: parent.left
             leftMargin: Theme.horizontalPageMargin
