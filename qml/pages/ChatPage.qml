@@ -14,11 +14,20 @@ Page {
     property int lastPromptTokens: 0
     property int lastCompletionTokens: 0
     property int conversationTokens: 0
+    property int pendingScrollIndex: -1
 
-    // Conversation history reachable by swiping forward
     onStatusChanged: {
-        if (status === PageStatus.Active && pageStack.nextPage(chatPage) === null) {
-            pageStack.pushAttached(Qt.resolvedUrl("ConversationHistoryPage.qml"))
+        if (status === PageStatus.Active) {
+            // Conversation history reachable by swiping forward
+            if (pageStack.nextPage(chatPage) === null) {
+                pageStack.pushAttached(Qt.resolvedUrl("ConversationHistoryPage.qml"))
+            }
+            // Jump requested from the pinned messages page
+            if (pendingScrollIndex >= 0) {
+                autoScroll = false
+                messageListView.positionViewAtIndex(pendingScrollIndex, ListView.Center)
+                pendingScrollIndex = -1
+            }
         }
     }
 
@@ -54,6 +63,13 @@ Page {
                     } else {
                         pageStack.push(Qt.resolvedUrl("ConversationHistoryPage.qml"))
                     }
+                }
+            }
+            MenuItem {
+                text: qsTr("Pinned messages")
+                onClicked: {
+                    conversationManager.saveCurrentConversation()
+                    pageStack.push(Qt.resolvedUrl("PinnedMessagesPage.qml"), { chatPage: chatPage })
                 }
             }
             MenuItem {
@@ -127,9 +143,14 @@ Page {
             role: model.role
             content: model.content
             isLast: index === messageListView.count - 1
+            pinned: model.pinned
 
             onRegenerateRequested: chatPage.regenerateLastResponse()
             onEditRequested: chatPage.editMessage(index, model.content)
+            onPinToggled: {
+                conversationModel.togglePinned(index)
+                conversationManager.saveCurrentConversation()
+            }
         }
 
         VerticalScrollDecorator {}

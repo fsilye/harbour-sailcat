@@ -79,7 +79,7 @@ void ConversationManager::loadConversation(const QString &conversationId)
 
     // Load messages preserving their original timestamps
     for (const Message &msg : conv->messages) {
-        m_currentConversation->addMessage(msg.role, msg.content, msg.timestamp);
+        m_currentConversation->addMessage(msg.role, msg.content, msg.timestamp, msg.pinned);
     }
 
     m_settings.setValue("lastConversationId", m_currentConversationId);
@@ -160,6 +160,7 @@ void ConversationManager::saveCurrentConversation()
         msg.role = msgObj["role"].toString();
         msg.content = msgObj["content"].toString();
         msg.timestamp = msgObj["timestamp"].toVariant().toLongLong();
+        msg.pinned = msgObj["pinned"].toBool();
         conv->messages.append(msg);
     }
 
@@ -198,6 +199,7 @@ void ConversationManager::loadAllConversations()
             msg.role = msgObj["role"].toString();
             msg.content = msgObj["content"].toString();
             msg.timestamp = msgObj["timestamp"].toVariant().toLongLong();
+            msg.pinned = msgObj["pinned"].toBool();
             conv.messages.append(msg);
         }
 
@@ -222,6 +224,7 @@ void ConversationManager::saveAllConversations()
             msgObj["role"] = msg.role;
             msgObj["content"] = msg.content;
             msgObj["timestamp"] = msg.timestamp;
+            msgObj["pinned"] = msg.pinned;
             messagesArray.append(msgObj);
         }
         obj["messages"] = messagesArray;
@@ -328,6 +331,30 @@ void ConversationManager::purgeAllConversations()
 QString ConversationManager::currentConversationId() const
 {
     return m_currentConversationId;
+}
+
+QVariantList ConversationManager::getPinnedMessages() const
+{
+    QVariantList result;
+
+    for (const Conversation &conv : m_conversations) {
+        for (int i = 0; i < conv.messages.count(); ++i) {
+            const Message &msg = conv.messages.at(i);
+            if (!msg.pinned) {
+                continue;
+            }
+            QVariantMap entry;
+            entry["conversationId"] = conv.id;
+            entry["conversationTitle"] = conv.title.isEmpty() ? tr("Untitled") : conv.title;
+            entry["messageIndex"] = i;
+            entry["role"] = msg.role;
+            entry["content"] = msg.content;
+            entry["timestamp"] = msg.timestamp;
+            result.append(entry);
+        }
+    }
+
+    return result;
 }
 
 QString ConversationManager::conversationToMarkdown(const QString &conversationId) const

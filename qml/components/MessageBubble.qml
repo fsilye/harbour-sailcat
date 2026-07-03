@@ -9,9 +9,11 @@ ListItem {
     property string role: "user"
     property string content: ""
     property bool isLast: false
+    property bool pinned: false
 
     signal regenerateRequested()
     signal editRequested()
+    signal pinToggled()
 
     menu: ContextMenu {
         MenuItem {
@@ -19,6 +21,10 @@ ListItem {
             onClicked: {
                 Clipboard.text = messageItem.content
             }
+        }
+        MenuItem {
+            text: messageItem.pinned ? qsTr("Unpin") : qsTr("Pin")
+            onClicked: messageItem.pinToggled()
         }
         MenuItem {
             text: qsTr("Copy code")
@@ -44,6 +50,27 @@ ListItem {
         color: role === "user"
             ? Theme.rgba(Theme.highlightBackgroundColor, 0.15)
             : "transparent"
+    }
+
+    // Pinned indicator: thin highlight edge + star in the corner
+    Rectangle {
+        visible: messageItem.pinned
+        width: Theme.paddingSmall / 2
+        height: parent.height
+        anchors.left: parent.left
+        color: Theme.highlightColor
+    }
+
+    Icon {
+        visible: messageItem.pinned
+        source: "image://theme/icon-s-favorite"
+        color: Theme.highlightColor
+        anchors {
+            top: parent.top
+            right: parent.right
+            topMargin: Theme.paddingSmall
+            rightMargin: Theme.paddingSmall
+        }
     }
 
     Label {

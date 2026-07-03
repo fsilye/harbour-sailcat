@@ -10,6 +10,7 @@ struct Message {
     QString role;      // "user" or "assistant"
     QString content;
     qint64 timestamp;
+    bool pinned = false;
 };
 
 class ConversationModel : public QAbstractListModel
@@ -21,7 +22,8 @@ public:
     enum MessageRoles {
         RoleRole = Qt::UserRole + 1,
         ContentRole,
-        TimestampRole
+        TimestampRole,
+        PinnedRole
     };
 
     explicit ConversationModel(QObject *parent = nullptr);
@@ -36,11 +38,12 @@ public:
     Q_INVOKABLE void removeLastMessageIfEmpty();
     Q_INVOKABLE void removeLastAssistantMessage();
     Q_INVOKABLE void truncateFrom(int index);
+    Q_INVOKABLE void togglePinned(int index);
     Q_INVOKABLE void clearConversation();
     Q_INVOKABLE QVariant getMessagesForApi() const;
     Q_INVOKABLE QString getFirstUserMessage() const;
 
-    void addMessage(const QString &role, const QString &content, qint64 timestamp);
+    void addMessage(const QString &role, const QString &content, qint64 timestamp, bool pinned = false);
     QJsonArray toJsonArray() const;
 
 signals:

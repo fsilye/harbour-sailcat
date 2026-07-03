@@ -27,6 +27,7 @@ DISTFILES += qml/harbour-sailcat.qml \
     qml/pages/ConversationListPage.qml \
     qml/pages/ConversationHistoryPage.qml \
     qml/pages/ConversationDetailPage.qml \
+    qml/pages/PinnedMessagesPage.qml \
     qml/pages/SettingsPage.qml \
     qml/pages/StatsPage.qml \
     qml/components/MessageBubble.qml \

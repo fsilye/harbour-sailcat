@@ -26,6 +26,8 @@ QVariant ConversationModel::data(const QModelIndex &index, int role) const
         return message.content;
     case TimestampRole:
         return message.timestamp;
+    case PinnedRole:
+        return message.pinned;
     default:
         return QVariant();
     }
@@ -37,15 +39,17 @@ QHash<int, QByteArray> ConversationModel::roleNames() const
     roles[RoleRole] = "role";
     roles[ContentRole] = "content";
     roles[TimestampRole] = "timestamp";
+    roles[PinnedRole] = "pinned";
     return roles;
 }
 
-void ConversationModel::addMessage(const QString &role, const QString &content, qint64 timestamp)
+void ConversationModel::addMessage(const QString &role, const QString &content, qint64 timestamp, bool pinned)
 {
     Message msg;
     msg.role = role;
     msg.content = content;
     msg.timestamp = timestamp;
+    msg.pinned = pinned;
 
     beginInsertRows(QModelIndex(), m_messages.count(), m_messages.count());
     m_messages.append(msg);
@@ -130,6 +134,16 @@ void ConversationModel::truncateFrom(int index)
     emit countChanged();
 }
 
+void ConversationModel::togglePinned(int index)
+{
+    if (index < 0 || index >= m_messages.count())
+        return;
+
+    m_messages[index].pinned = !m_messages[index].pinned;
+    QModelIndex modelIndex = createIndex(index, 0);
+    emit dataChanged(modelIndex, modelIndex, {PinnedRole});
+}
+
 void ConversationModel::clearConversation()
 {
     beginResetModel();
@@ -172,6 +186,7 @@ QJsonArray ConversationModel::toJsonArray() const
         msgObj["role"] = msg.role;
         msgObj["content"] = msg.content;
         msgObj["timestamp"] = msg.timestamp;
+        msgObj["pinned"] = msg.pinned;
         messages.append(msgObj);
     }
 
