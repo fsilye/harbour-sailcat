@@ -100,6 +100,22 @@ void ConversationModel::removeLastMessageIfEmpty()
     }
 }
 
+void ConversationModel::removeLastAssistantMessage()
+{
+    if (m_messages.isEmpty())
+        return;
+
+    int lastIndex = m_messages.count() - 1;
+    if (m_messages.at(lastIndex).role != "assistant")
+        return;
+
+    beginRemoveRows(QModelIndex(), lastIndex, lastIndex);
+    m_messages.removeAt(lastIndex);
+    endRemoveRows();
+
+    emit countChanged();
+}
+
 void ConversationModel::clearConversation()
 {
     beginResetModel();

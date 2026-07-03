@@ -8,6 +8,9 @@ ListItem {
 
     property string role: "user"
     property string content: ""
+    property bool isLast: false
+
+    signal regenerateRequested()
 
     menu: ContextMenu {
         MenuItem {
@@ -15,6 +18,11 @@ ListItem {
             onClicked: {
                 Clipboard.text = messageItem.content
             }
+        }
+        MenuItem {
+            text: qsTr("Regenerate")
+            visible: messageItem.role === "assistant" && messageItem.isLast && !mistralApi.isBusy
+            onClicked: messageItem.regenerateRequested()
         }
     }
 

@@ -67,6 +67,9 @@ Page {
             width: messageListView.width
             role: model.role
             content: model.content
+            isLast: index === messageListView.count - 1
+
+            onRegenerateRequested: chatPage.regenerateLastResponse()
         }
 
         VerticalScrollDecorator {}
@@ -481,6 +484,22 @@ Page {
         settingsManager.resetNextMessageModel()
 
         messageListView.positionViewAtEnd()
+    }
+
+    function regenerateLastResponse() {
+        if (mistralApi.isBusy) return
+
+        conversationModel.removeLastAssistantMessage()
+
+        var messages = conversationModel.getMessagesForApi()
+        if (settingsManager.systemPrompt !== "") {
+            messages = [{ "role": "system", "content": settingsManager.systemPrompt }].concat(messages)
+        }
+
+        autoScroll = true
+        conversationModel.addAssistantMessage("")
+        mistralApi.sendMessage(settingsManager.apiKey, settingsManager.modelName, messages,
+                               settingsManager.temperature, settingsManager.maxTokens)
     }
 
     function refreshConversationsList() {
