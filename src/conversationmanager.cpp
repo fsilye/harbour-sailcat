@@ -135,6 +135,15 @@ QJsonArray ConversationManager::getConversationsList() const
         obj["createdAt"] = conv.createdAt;
         obj["updatedAt"] = conv.updatedAt;
         obj["messageCount"] = conv.messages.count();
+
+        int userCount = 0;
+        for (const Message &msg : conv.messages) {
+            if (msg.role == "user") {
+                userCount++;
+            }
+        }
+        obj["userMessageCount"] = userCount;
+
         list.append(obj);
     }
 
@@ -438,6 +447,63 @@ void ConversationManager::addTokenUsage(int promptTokens, int completionTokens)
     m_settings.sync();
 }
 
+QVariantMap ConversationManager::getConversationStatistics(const QString &conversationId) const
+{
+    QVariantMap stats;
+
+    for (const Conversation &conv : m_conversations) {
+        if (conv.id != conversationId) {
+            continue;
+        }
+
+        int userCount = 0;
+        int assistantCount = 0;
+        qint64 totalChars = 0;
+        int longestChars = 0;
+        QVariantList rhythm;
+
+        // Cap the rhythm chart to the last 40 messages
+        int rhythmStart = qMax(0, conv.messages.count() - 40);
+
+        for (int i = 0; i < conv.messages.count(); ++i) {
+            const Message &msg = conv.messages.at(i);
+            if (msg.role == "user") {
+                userCount++;
+            } else {
+                assistantCount++;
+            }
+            totalChars += msg.content.length();
+            longestChars = qMax(longestChars, msg.content.length());
+
+            if (i >= rhythmStart) {
+                QVariantMap bar;
+                bar["chars"] = msg.content.length();
+                bar["role"] = msg.role;
+                rhythm.append(bar);
+            }
+        }
+
+        int count = conv.messages.count();
+        stats["messageCount"] = count;
+        stats["userCount"] = userCount;
+        stats["assistantCount"] = assistantCount;
+        stats["totalChars"] = totalChars;
+        stats["avgChars"] = count > 0 ? int(totalChars / count) : 0;
+        stats["longestChars"] = longestChars;
+        stats["estimatedTokens"] = totalChars / 4;
+
+        qint64 durationMs = 0;
+        if (count > 1) {
+            durationMs = conv.messages.last().timestamp - conv.messages.first().timestamp;
+        }
+        stats["durationMs"] = durationMs;
+        stats["rhythm"] = rhythm;
+        break;
+    }
+
+    return stats;
+}
+
 QVariantMap ConversationManager::getStatistics() const
 {
     QVariantMap stats;
@@ -541,7 +607,11 @@ QVariantList ConversationManager::searchConversations(const QString &query) cons
         QString matchPreview;
 
         // Search in messages
+        int userCount = 0;
         for (const Message &msg : conv.messages) {
+            if (msg.role == "user") {
+                userCount++;
+            }
             if (msg.content.toLower().contains(searchQuery)) {
                 matchCount++;
 
@@ -570,6 +640,7 @@ QVariantList ConversationManager::searchConversations(const QString &query) cons
             result["createdAt"] = conv.createdAt;
             result["updatedAt"] = conv.updatedAt;
             result["messageCount"] = conv.messages.count();
+            result["userMessageCount"] = userCount;
             result["matchCount"] = matchCount;
             result["matchPreview"] = matchPreview.isEmpty() ? tr("Match in title") : matchPreview;
             result["titleMatch"] = titleMatch;

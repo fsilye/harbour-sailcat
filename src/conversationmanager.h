@@ -39,6 +39,7 @@ public:
     Q_INVOKABLE QString getStorageSizeFormatted() const;
     Q_INVOKABLE void purgeAllConversations();
     Q_INVOKABLE QVariantMap getStatistics() const;
+    Q_INVOKABLE QVariantMap getConversationStatistics(const QString &conversationId) const;
     Q_INVOKABLE QVariantList searchConversations(const QString &query) const;
     Q_INVOKABLE void addTokenUsage(int promptTokens, int completionTokens);
     Q_INVOKABLE QString currentConversationId() const;

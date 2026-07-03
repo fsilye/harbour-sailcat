@@ -42,6 +42,8 @@ Status legend: `todo` / `in progress` / `done`
 | 12 | Better markdown rendering | [12-markdown-rendering.md](features/12-markdown-rendering.md) | done (v1.9.16) |
 | 13 | Pinned messages | [13-pinned-messages.md](features/13-pinned-messages.md) | done (v1.9.17) |
 | 14 | Eye candy animations | [14-eye-candy.md](features/14-eye-candy.md) | done (v1.9.19) |
+| 15 | Animated stats & graphs in conversation pages | [15-inline-stats-graphs.md](features/15-inline-stats-graphs.md) | done (v1.9.20) |
+| 16 | Usability: full menus everywhere, model button | [16-usability.md](features/16-usability.md) | todo |
 
 ## Already done (do not re-implement)
 

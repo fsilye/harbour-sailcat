@@ -8,6 +8,8 @@ Page {
 
     property string storageSize: conversationManager.getStorageSizeFormatted()
     property string searchQuery: ""
+    property var dayCounts: []
+    property int maxDayCount: 0
 
     SilicaListView {
         id: conversationsList
@@ -68,6 +70,65 @@ Page {
                         font.pixelSize: Theme.fontSizeExtraSmall
                         color: Theme.secondaryColor
                     }
+                }
+            }
+
+            // 14-day activity chart with staggered grow-in
+            Column {
+                width: parent.width
+                spacing: Theme.paddingSmall
+                visible: historyPage.maxDayCount > 0
+
+                Row {
+                    id: historyChart
+                    x: Theme.horizontalPageMargin
+                    width: parent.width - 2 * Theme.horizontalPageMargin
+                    height: Theme.itemSizeSmall
+                    spacing: Theme.paddingSmall / 2
+
+                    Repeater {
+                        model: historyPage.dayCounts
+
+                        Item {
+                            width: (historyChart.width - historyChart.spacing * 13) / 14
+                            height: historyChart.height
+
+                            Rectangle {
+                                id: historyBar
+                                anchors.bottom: parent.bottom
+                                width: parent.width
+                                radius: 2
+                                height: 4
+                                color: modelData > 0
+                                       ? Theme.rgba(Theme.highlightColor,
+                                                    0.4 + 0.6 * modelData / historyPage.maxDayCount)
+                                       : Theme.rgba(Theme.secondaryColor, 0.2)
+
+                                property real targetHeight: historyPage.maxDayCount > 0 && modelData > 0
+                                        ? Math.max(6, parent.height * modelData / historyPage.maxDayCount)
+                                        : 4
+
+                                SequentialAnimation {
+                                    running: true
+                                    PauseAnimation { duration: index * 40 }
+                                    NumberAnimation {
+                                        target: historyBar
+                                        property: "height"
+                                        to: historyBar.targetHeight
+                                        duration: 350
+                                        easing.type: Easing.OutBack
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Label {
+                    x: Theme.horizontalPageMargin
+                    text: qsTr("Activity - last 14 days")
+                    font.pixelSize: Theme.fontSizeTiny
+                    color: Theme.secondaryColor
                 }
             }
 
@@ -163,6 +224,26 @@ Page {
                     }
                 }
 
+                // Animated user/assistant ratio
+                Rectangle {
+                    width: parent.width
+                    height: Math.max(3, Theme.paddingSmall / 3)
+                    radius: height / 2
+                    color: Theme.rgba(Theme.secondaryHighlightColor, 0.3)
+                    visible: (model.messageCount || 0) > 0 && model.userMessageCount !== undefined
+
+                    Rectangle {
+                        height: parent.height
+                        radius: parent.radius
+                        color: Theme.highlightColor
+                        width: parent.width * ((model.userMessageCount || 0) / Math.max(1, model.messageCount))
+
+                        Behavior on width {
+                            NumberAnimation { duration: 450; easing.type: Easing.OutQuad }
+                        }
+                    }
+                }
+
                 Row {
                     spacing: Theme.paddingMedium
 
@@ -249,6 +330,14 @@ Page {
             conversationsListModel.append(conversations[i])
         }
         storageSize = conversationManager.getStorageSizeFormatted()
+
+        var stats = conversationManager.getStatistics()
+        dayCounts = stats.messagesPerDay || []
+        var max = 0
+        for (var j = 0; j < dayCounts.length; j++) {
+            if (dayCounts[j] > max) max = dayCounts[j]
+        }
+        maxDayCount = max
     }
 
     function performSearch() {

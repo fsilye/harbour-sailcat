@@ -12,6 +12,14 @@ Page {
     property int maxPerHour: maxOf(messagesPerHour)
     property real userRatio: (stats.totalMessages || 0) > 0
                              ? stats.totalUserMessages / stats.totalMessages : 0
+    property real chartProgress: 0
+
+    NumberAnimation on chartProgress {
+        from: 0
+        to: 1
+        duration: 800
+        easing.type: Easing.OutCubic
+    }
 
     function maxOf(list) {
         var m = 0
@@ -112,7 +120,7 @@ Page {
                     color: Theme.rgba(Theme.secondaryHighlightColor, 0.4)
 
                     Rectangle {
-                        width: Math.max(parent.height, parent.width * statsPage.userRatio)
+                        width: Math.max(parent.height, parent.width * statsPage.userRatio * statsPage.chartProgress)
                         height: parent.height
                         radius: parent.radius
                         color: Theme.highlightColor
@@ -168,7 +176,7 @@ Page {
                                 width: parent.width
                                 radius: 2
                                 height: statsPage.maxPerDay > 0 && modelData > 0
-                                        ? Math.max(6, parent.height * modelData / statsPage.maxPerDay)
+                                        ? Math.max(6, parent.height * statsPage.chartProgress * modelData / statsPage.maxPerDay)
                                         : 6
                                 color: modelData > 0
                                        ? Theme.rgba(Theme.highlightColor,
@@ -239,7 +247,7 @@ Page {
                                 width: parent.width
                                 radius: 1
                                 height: statsPage.maxPerHour > 0 && modelData > 0
-                                        ? Math.max(4, parent.height * modelData / statsPage.maxPerHour)
+                                        ? Math.max(4, parent.height * statsPage.chartProgress * modelData / statsPage.maxPerHour)
                                         : 4
                                 color: modelData > 0
                                        ? Theme.rgba(Theme.highlightColor,
