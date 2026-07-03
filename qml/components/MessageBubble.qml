@@ -4,12 +4,14 @@ import Sailfish.Silica 1.0
 ListItem {
     id: messageItem
     width: parent.width
-    contentHeight: messageLabel.height + Theme.paddingLarge
+    contentHeight: Math.max(contentColumn.height + Theme.paddingLarge,
+                            busyIndicator.visible ? Theme.itemSizeExtraSmall : 0)
 
     property string role: "user"
     property string content: ""
     property bool isLast: false
     property bool pinned: false
+    property double timestamp: 0
 
     signal regenerateRequested()
     signal editRequested()
@@ -73,8 +75,8 @@ ListItem {
         }
     }
 
-    Label {
-        id: messageLabel
+    Column {
+        id: contentColumn
         anchors {
             left: parent.left
             right: parent.right
@@ -82,15 +84,45 @@ ListItem {
             leftMargin: role === "user" ? Theme.horizontalPageMargin * 2 : Theme.horizontalPageMargin
             rightMargin: role === "assistant" ? Theme.horizontalPageMargin * 2 : Theme.horizontalPageMargin
         }
-        text: formatMarkdown(content)
-        textFormat: Text.RichText
-        wrapMode: Text.Wrap
-        font.pixelSize: Theme.fontSizeSmall
-        color: Theme.primaryColor
-        linkColor: Theme.highlightColor
-        horizontalAlignment: role === "user" ? Text.AlignRight : Text.AlignLeft
+        spacing: Theme.paddingSmall / 2
 
-        onLinkActivated: Qt.openUrlExternally(link)
+        Label {
+            id: messageLabel
+            width: parent.width
+            text: formatMarkdown(content)
+            textFormat: Text.RichText
+            wrapMode: Text.Wrap
+            font.pixelSize: Theme.fontSizeSmall
+            color: Theme.primaryColor
+            linkColor: Theme.highlightColor
+            horizontalAlignment: role === "user" ? Text.AlignRight : Text.AlignLeft
+            visible: content !== ""
+
+            onLinkActivated: Qt.openUrlExternally(link)
+        }
+
+        Label {
+            width: parent.width
+            text: messageItem.timestamp > 0
+                  ? Qt.formatTime(new Date(messageItem.timestamp), "hh:mm") : ""
+            visible: text !== "" && content !== ""
+            horizontalAlignment: role === "user" ? Text.AlignRight : Text.AlignLeft
+            font.pixelSize: Theme.fontSizeTiny
+            color: Theme.secondaryColor
+        }
+    }
+
+    // Streaming placeholder shown inside the pending assistant bubble
+    BusyIndicator {
+        id: busyIndicator
+        visible: role === "assistant" && content === "" && mistralApi.isBusy
+        running: visible
+        size: BusyIndicatorSize.ExtraSmall
+        anchors {
+            left: parent.left
+            leftMargin: Theme.horizontalPageMargin
+            verticalCenter: parent.verticalCenter
+        }
     }
 
     function extractCodeBlocks(text) {

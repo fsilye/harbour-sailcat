@@ -144,6 +144,7 @@ Page {
             content: model.content
             isLast: index === messageListView.count - 1
             pinned: model.pinned
+            timestamp: model.timestamp
 
             onRegenerateRequested: chatPage.regenerateLastResponse()
             onEditRequested: chatPage.editMessage(index, model.content)
@@ -268,19 +269,6 @@ Page {
                         }
                     }
                 }
-            }
-        }
-
-        // Busy indicator
-        Item {
-            width: parent.width
-            height: mistralApi.isBusy ? Theme.itemSizeExtraSmall : 0
-            visible: height > 0
-
-            BusyIndicator {
-                anchors.centerIn: parent
-                running: mistralApi.isBusy
-                size: BusyIndicatorSize.Small
             }
         }
     }

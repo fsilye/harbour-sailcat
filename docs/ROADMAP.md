@@ -32,7 +32,7 @@ Status legend: `todo` / `in progress` / `done`
 
 | # | Feature | Spec | Status |
 |---|---------|------|--------|
-| 10 | Design fixes (theming, markdown, timestamps, dedup) | [10-design-polish.md](features/10-design-polish.md) | todo |
+| 10 | Design fixes (theming, markdown, timestamps, dedup) | [10-design-polish.md](features/10-design-polish.md) | done (10.1 via #12, 10.4 via #11, rest v1.9.18) |
 
 ## Phase 5 — User-requested UX (July 2026)
 

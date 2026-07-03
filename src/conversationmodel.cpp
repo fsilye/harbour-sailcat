@@ -177,6 +177,16 @@ QString ConversationModel::getFirstUserMessage() const
     return QString();
 }
 
+QString ConversationModel::getLastAssistantMessage() const
+{
+    for (int i = m_messages.count() - 1; i >= 0; --i) {
+        if (m_messages.at(i).role == "assistant" && !m_messages.at(i).content.isEmpty()) {
+            return m_messages.at(i).content;
+        }
+    }
+    return QString();
+}
+
 QJsonArray ConversationModel::toJsonArray() const
 {
     QJsonArray messages;

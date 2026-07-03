@@ -1,6 +1,6 @@
 # 10 — Design & Polish Fixes
 
-**Status:** todo
+**Status:** done — 10.1 covered by feature 12, 10.4 covered by feature 11, 10.2/10.3/10.5 shipped in v1.9.18
 **Depends on:** nothing (independent items; can be done in any order, each is a standalone commit)
 
 Five small fixes identified by design audit. Each item is one commit.

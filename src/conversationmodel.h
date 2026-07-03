@@ -42,6 +42,7 @@ public:
     Q_INVOKABLE void clearConversation();
     Q_INVOKABLE QVariant getMessagesForApi() const;
     Q_INVOKABLE QString getFirstUserMessage() const;
+    Q_INVOKABLE QString getLastAssistantMessage() const;
 
     void addMessage(const QString &role, const QString &content, qint64 timestamp, bool pinned = false);
     QJsonArray toJsonArray() const;
