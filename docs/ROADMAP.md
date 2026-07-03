@@ -34,6 +34,14 @@ Status legend: `todo` / `in progress` / `done`
 |---|---------|------|--------|
 | 10 | Design fixes (theming, markdown, timestamps, dedup) | [10-design-polish.md](features/10-design-polish.md) | todo |
 
+## Phase 5 — User-requested UX (July 2026)
+
+| # | Feature | Spec | Status |
+|---|---------|------|--------|
+| 11 | Chat UX: bottom menu, token banner, swipe to history | [11-ux-improvements.md](features/11-ux-improvements.md) | done (v1.9.15) |
+| 12 | Better markdown rendering | [12-markdown-rendering.md](features/12-markdown-rendering.md) | todo |
+| 13 | Pinned messages | [13-pinned-messages.md](features/13-pinned-messages.md) | todo |
+
 ## Already done (do not re-implement)
 
 - Conversation persistence, history page, search (`ConversationManager::searchConversations` + `SearchField` in ConversationHistoryPage)

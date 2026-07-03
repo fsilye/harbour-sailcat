@@ -235,6 +235,13 @@ Page {
         refreshList()
     }
 
+    // Refresh when returning to the page (it stays alive as an attached page)
+    onStatusChanged: {
+        if (status === PageStatus.Activating) {
+            refreshList()
+        }
+    }
+
     function refreshList() {
         conversationsListModel.clear()
         var conversations = conversationManager.getConversationsList()

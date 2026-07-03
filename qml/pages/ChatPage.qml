@@ -11,6 +11,16 @@ Page {
     property bool firstUse: false
     property string streamingContent: ""
     property bool autoScroll: true
+    property int lastPromptTokens: 0
+    property int lastCompletionTokens: 0
+    property int conversationTokens: 0
+
+    // Conversation history reachable by swiping forward
+    onStatusChanged: {
+        if (status === PageStatus.Active && pageStack.nextPage(chatPage) === null) {
+            pageStack.pushAttached(Qt.resolvedUrl("ConversationHistoryPage.qml"))
+        }
+    }
 
     SilicaListView {
         id: messageListView
@@ -38,7 +48,13 @@ Page {
         PullDownMenu {
             MenuItem {
                 text: qsTr("Conversation History")
-                onClicked: pageStack.push(Qt.resolvedUrl("ConversationHistoryPage.qml"))
+                onClicked: {
+                    if (pageStack.nextPage(chatPage) !== null) {
+                        pageStack.navigateForward()
+                    } else {
+                        pageStack.push(Qt.resolvedUrl("ConversationHistoryPage.qml"))
+                    }
+                }
             }
             MenuItem {
                 text: qsTr("Settings & About")
@@ -73,6 +89,33 @@ Page {
             }
         }
 
+        // Frequent actions reachable from the bottom of the conversation
+        PushUpMenu {
+            MenuItem {
+                text: qsTr("New conversation")
+                enabled: conversationModel.count > 0
+                onClicked: {
+                    conversationManager.createNewConversation()
+                    streamingContent = ""
+                }
+            }
+            MenuItem {
+                text: qsTr("Export conversation")
+                enabled: conversationModel.count > 0
+                onClicked: {
+                    var path = conversationManager.exportConversation(conversationManager.currentConversationId())
+                    if (path !== "") {
+                        exportNotification.previewSummary = qsTr("Conversation exported")
+                        exportNotification.previewBody = path
+                    } else {
+                        exportNotification.previewSummary = qsTr("Export failed")
+                        exportNotification.previewBody = ""
+                    }
+                    exportNotification.publish()
+                }
+            }
+        }
+
         ViewPlaceholder {
             enabled: conversationModel.count === 0
             text: firstUse ? qsTr("Welcome to SailCat") : qsTr("Start a conversation")
@@ -101,6 +144,24 @@ Page {
             bottom: parent.bottom
         }
         spacing: 0
+
+        // Token usage banner
+        Item {
+            width: parent.width
+            height: visible ? tokenLabel.height + Theme.paddingSmall : 0
+            visible: chatPage.conversationTokens > 0
+
+            Label {
+                id: tokenLabel
+                anchors.centerIn: parent
+                text: qsTr("Tokens: %1 total - last: %2 in / %3 out")
+                        .arg(chatPage.conversationTokens)
+                        .arg(chatPage.lastPromptTokens)
+                        .arg(chatPage.lastCompletionTokens)
+                font.pixelSize: Theme.fontSizeTiny
+                color: Theme.secondaryColor
+            }
+        }
 
         // Error banner
         Rectangle {
@@ -199,113 +260,6 @@ Page {
                 anchors.centerIn: parent
                 running: mistralApi.isBusy
                 size: BusyIndicatorSize.Small
-            }
-        }
-    }
-
-    // Docked panel for conversation history (swipe right)
-    DockedPanel {
-        id: conversationPanel
-        width: parent.width
-        height: parent.height
-        dock: Dock.Left
-        open: false
-
-        SilicaListView {
-            anchors.fill: parent
-
-            header: PageHeader {
-                title: qsTr("Conversations")
-            }
-
-            model: ListModel {
-                id: conversationsListModel
-            }
-
-            delegate: ListItem {
-                id: conversationItem
-                contentHeight: Theme.itemSizeMedium
-
-                onClicked: {
-                    conversationManager.loadConversation(model.id)
-                    conversationPanel.hide()
-                    streamingContent = ""
-                }
-
-                menu: ContextMenu {
-                    MenuItem {
-                        text: qsTr("Delete")
-                        onClicked: {
-                            conversationItem.remorseAction(qsTr("Deleting"), function() {
-                                conversationManager.deleteConversation(model.id)
-                                refreshConversationsList()
-                            })
-                        }
-                    }
-                }
-
-                Column {
-                    anchors {
-                        left: parent.left
-                        right: parent.right
-                        leftMargin: Theme.horizontalPageMargin
-                        rightMargin: Theme.horizontalPageMargin
-                        verticalCenter: parent.verticalCenter
-                    }
-                    spacing: Theme.paddingSmall
-
-                    Label {
-                        width: parent.width
-                        text: model.title
-                        color: conversationItem.highlighted ? Theme.highlightColor : Theme.primaryColor
-                        font.pixelSize: Theme.fontSizeMedium
-                        truncationMode: TruncationMode.Fade
-                    }
-
-                    Row {
-                        spacing: Theme.paddingMedium
-
-                        Label {
-                            text: Qt.formatDateTime(new Date(model.updatedAt), "dd/MM/yyyy")
-                            color: conversationItem.highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
-                            font.pixelSize: Theme.fontSizeExtraSmall
-                        }
-
-                        Label {
-                            text: "•"
-                            color: conversationItem.highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
-                            font.pixelSize: Theme.fontSizeExtraSmall
-                        }
-
-                        Label {
-                            text: qsTr("%n message(s)", "", model.messageCount)
-                            color: conversationItem.highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
-                            font.pixelSize: Theme.fontSizeExtraSmall
-                        }
-                    }
-                }
-            }
-
-            ViewPlaceholder {
-                enabled: conversationsListModel.count === 0
-                text: qsTr("No conversations")
-                hintText: qsTr("Start chatting to create conversations")
-            }
-
-            VerticalScrollDecorator {}
-        }
-
-        IconButton {
-            anchors {
-                horizontalCenter: parent.horizontalCenter
-                bottom: parent.bottom
-                bottomMargin: Theme.paddingLarge
-            }
-            icon.source: "image://theme/icon-m-add"
-            onClicked: {
-                conversationManager.createNewConversation()
-                conversationPanel.hide()
-                streamingContent = ""
             }
         }
     }
@@ -420,6 +374,9 @@ Page {
 
         onUsageReceived: {
             conversationManager.addTokenUsage(promptTokens, completionTokens)
+            chatPage.lastPromptTokens = promptTokens
+            chatPage.lastCompletionTokens = completionTokens
+            chatPage.conversationTokens += promptTokens + completionTokens
         }
 
         onResponseCompleted: {
@@ -455,9 +412,18 @@ Page {
         }
     }
 
+    Connections {
+        target: conversationManager
+
+        onCurrentConversationChanged: {
+            chatPage.lastPromptTokens = 0
+            chatPage.lastCompletionTokens = 0
+            chatPage.conversationTokens = 0
+        }
+    }
+
     Component.onCompleted: {
         firstUse = !settingsManager.hasApiKey
-        refreshConversationsList()
 
         // Show first launch dialog after a short delay to let PageStack settle
         if (settingsManager.isFirstLaunch()) {
@@ -532,14 +498,6 @@ Page {
         conversationModel.addAssistantMessage("")
         mistralApi.sendMessage(settingsManager.apiKey, settingsManager.modelName, messages,
                                settingsManager.temperature, settingsManager.maxTokens)
-    }
-
-    function refreshConversationsList() {
-        conversationsListModel.clear()
-        var conversations = conversationManager.getConversationsList()
-        for (var i = 0; i < conversations.length; i++) {
-            conversationsListModel.append(conversations[i])
-        }
     }
 
     ModelSelector {
