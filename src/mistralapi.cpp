@@ -329,6 +329,13 @@ void MistralAPI::parseStreamLine(const QString &line)
 
     QJsonObject obj = doc.object();
 
+    // The final chunk before [DONE] carries token usage
+    if (obj.contains("usage") && obj["usage"].isObject()) {
+        QJsonObject usage = obj["usage"].toObject();
+        emit usageReceived(usage["prompt_tokens"].toInt(),
+                           usage["completion_tokens"].toInt());
+    }
+
     // Extract delta content
     QJsonArray choices = obj["choices"].toArray();
     if (!choices.isEmpty()) {

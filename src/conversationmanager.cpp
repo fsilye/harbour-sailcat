@@ -9,7 +9,12 @@ ConversationManager::ConversationManager(QObject *parent)
     : QObject(parent)
     , m_currentConversation(new ConversationModel(this))
     , m_settings("harbour-sailcat", "conversations")
+    , m_totalPromptTokens(0)
+    , m_totalCompletionTokens(0)
 {
+    m_totalPromptTokens = m_settings.value("stats/totalPromptTokens", 0).toLongLong();
+    m_totalCompletionTokens = m_settings.value("stats/totalCompletionTokens", 0).toLongLong();
+
     loadAllConversations();
 
     // Si aucune conversation n'existe, en créer une nouvelle
@@ -316,6 +321,19 @@ void ConversationManager::purgeAllConversations()
     emit conversationCountChanged();
 }
 
+void ConversationManager::addTokenUsage(int promptTokens, int completionTokens)
+{
+    if (promptTokens <= 0 && completionTokens <= 0) {
+        return;
+    }
+    m_totalPromptTokens += promptTokens;
+    m_totalCompletionTokens += completionTokens;
+    // Persist immediately so counters survive a crash
+    m_settings.setValue("stats/totalPromptTokens", m_totalPromptTokens);
+    m_settings.setValue("stats/totalCompletionTokens", m_totalCompletionTokens);
+    m_settings.sync();
+}
+
 QVariantMap ConversationManager::getStatistics() const
 {
     QVariantMap stats;
@@ -393,6 +411,9 @@ QVariantMap ConversationManager::getStatistics() const
     stats["longestConvTitle"] = longestConvTitle;
     stats["longestMessageLength"] = longestMessageLength;
     stats["estimatedTokens"] = estimatedTokens;
+    stats["totalPromptTokens"] = m_totalPromptTokens;
+    stats["totalCompletionTokens"] = m_totalCompletionTokens;
+    stats["totalTokens"] = m_totalPromptTokens + m_totalCompletionTokens;
     stats["firstMessageDate"] = firstMessageDate;
     stats["messagesPerDay"] = messagesPerDay;
     stats["messagesPerHour"] = messagesPerHour;

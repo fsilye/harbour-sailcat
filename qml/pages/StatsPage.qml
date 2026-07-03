@@ -27,6 +27,12 @@ Page {
         return "~" + n
     }
 
+    function formatExactTokens(n) {
+        if (n >= 1000000) return (n / 1000000).toFixed(1) + "M"
+        if (n >= 1000) return (n / 1000).toFixed(1) + "K"
+        return "" + n
+    }
+
     SilicaFlickable {
         anchors.fill: parent
         contentHeight: column.height
@@ -53,7 +59,10 @@ Page {
                     model: [
                         { value: "" + (stats.totalConversations || 0), label: qsTr("Conversations") },
                         { value: "" + (stats.totalMessages || 0), label: qsTr("Messages") },
-                        { value: formatTokens(stats.estimatedTokens || 0), label: qsTr("Tokens used") },
+                        { value: (stats.totalTokens || 0) > 0
+                                 ? formatExactTokens(stats.totalTokens)
+                                 : formatTokens(stats.estimatedTokens || 0),
+                          label: qsTr("Tokens used") },
                         { value: conversationManager.getStorageSizeFormatted(), label: qsTr("Storage") }
                     ]
 
@@ -294,6 +303,18 @@ Page {
                     value: stats.firstMessageDate > 0
                            ? Qt.formatDateTime(new Date(stats.firstMessageDate), "dd/MM/yyyy")
                            : qsTr("Never")
+                }
+
+                DetailItem {
+                    label: qsTr("Prompt tokens")
+                    value: "" + (stats.totalPromptTokens || 0)
+                    visible: (stats.totalTokens || 0) > 0
+                }
+
+                DetailItem {
+                    label: qsTr("Completion tokens")
+                    value: "" + (stats.totalCompletionTokens || 0)
+                    visible: (stats.totalTokens || 0) > 0
                 }
             }
 

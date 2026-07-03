@@ -393,6 +393,10 @@ Page {
             streamingContent = ""
         }
 
+        onUsageReceived: {
+            conversationManager.addTokenUsage(promptTokens, completionTokens)
+        }
+
         onResponseCompleted: {
             streamingContent = ""
 

@@ -36,6 +36,7 @@ signals:
     void isBusyChanged();
     void errorChanged();
     void streamingResponse(const QString &content);
+    void usageReceived(int promptTokens, int completionTokens);
     void responseCompleted();
     void messageSent();
     void titleGenerated(const QString &title);
