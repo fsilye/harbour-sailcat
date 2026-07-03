@@ -26,8 +26,10 @@ Page {
                 conversationManager.loadConversation(model.conversationId)
                 if (pinnedPage.chatPage) {
                     pinnedPage.chatPage.pendingScrollIndex = model.messageIndex
+                    pageStack.pop(pinnedPage.chatPage)
+                } else {
+                    pageStack.pop()
                 }
-                pageStack.pop()
             }
 
             Column {

@@ -292,6 +292,27 @@ Page {
                     })
                 }
             }
+            MenuItem {
+                text: qsTr("Settings & About")
+                onClicked: pageStack.push(Qt.resolvedUrl("SettingsPage.qml"))
+            }
+            MenuItem {
+                text: qsTr("Pinned messages")
+                onClicked: {
+                    pageStack.push(Qt.resolvedUrl("PinnedMessagesPage.qml"), {
+                        chatPage: pageStack.find(function(page) {
+                            return page.objectName === "chatPage"
+                        })
+                    })
+                }
+            }
+            MenuItem {
+                text: qsTr("New conversation")
+                onClicked: {
+                    conversationManager.createNewConversation()
+                    pageStack.pop()
+                }
+            }
         }
 
         ViewPlaceholder {

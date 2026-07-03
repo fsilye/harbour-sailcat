@@ -84,23 +84,9 @@ Page {
                 onClicked: pageStack.push(Qt.resolvedUrl("SettingsPage.qml"))
             }
             MenuItem {
-                text: qsTr("Change model for next message")
-                onClicked: modelSelector.open()
-            }
-            MenuItem {
                 text: qsTr("Export conversation")
                 enabled: conversationModel.count > 0
-                onClicked: {
-                    var path = conversationManager.exportConversation(conversationManager.currentConversationId())
-                    if (path !== "") {
-                        exportNotification.previewSummary = qsTr("Conversation exported")
-                        exportNotification.previewBody = path
-                    } else {
-                        exportNotification.previewSummary = qsTr("Export failed")
-                        exportNotification.previewBody = ""
-                    }
-                    exportNotification.publish()
-                }
+                onClicked: chatPage.exportCurrentConversation()
             }
             MenuItem {
                 text: qsTr("New conversation")
@@ -112,29 +98,40 @@ Page {
             }
         }
 
-        // Frequent actions reachable from the bottom of the conversation
+        // Same actions as the top pulley, reachable from the bottom of the conversation
         PushUpMenu {
+            MenuItem {
+                text: qsTr("Conversation History")
+                onClicked: {
+                    if (pageStack.nextPage(chatPage) !== null) {
+                        pageStack.navigateForward()
+                    } else {
+                        pageStack.push(Qt.resolvedUrl("ConversationHistoryPage.qml"))
+                    }
+                }
+            }
+            MenuItem {
+                text: qsTr("Pinned messages")
+                onClicked: {
+                    conversationManager.saveCurrentConversation()
+                    pageStack.push(Qt.resolvedUrl("PinnedMessagesPage.qml"), { chatPage: chatPage })
+                }
+            }
+            MenuItem {
+                text: qsTr("Settings & About")
+                onClicked: pageStack.push(Qt.resolvedUrl("SettingsPage.qml"))
+            }
+            MenuItem {
+                text: qsTr("Export conversation")
+                enabled: conversationModel.count > 0
+                onClicked: chatPage.exportCurrentConversation()
+            }
             MenuItem {
                 text: qsTr("New conversation")
                 enabled: conversationModel.count > 0
                 onClicked: {
                     conversationManager.createNewConversation()
                     streamingContent = ""
-                }
-            }
-            MenuItem {
-                text: qsTr("Export conversation")
-                enabled: conversationModel.count > 0
-                onClicked: {
-                    var path = conversationManager.exportConversation(conversationManager.currentConversationId())
-                    if (path !== "") {
-                        exportNotification.previewSummary = qsTr("Conversation exported")
-                        exportNotification.previewBody = path
-                    } else {
-                        exportNotification.previewSummary = qsTr("Export failed")
-                        exportNotification.previewBody = ""
-                    }
-                    exportNotification.publish()
                 }
             }
         }
@@ -287,9 +284,17 @@ Page {
                 }
                 spacing: Theme.paddingMedium
 
+                // Quick model switcher
+                IconButton {
+                    id: modelButton
+                    anchors.verticalCenter: parent.verticalCenter
+                    icon.source: "image://theme/icon-m-levels"
+                    onClicked: pageStack.push(modelSelector)
+                }
+
                 TextArea {
                     id: messageInput
-                    width: parent.width - sendButton.width - parent.spacing
+                    width: parent.width - modelButton.width - sendButton.width - parent.spacing * 2
                     height: Math.min(implicitHeight, Theme.itemSizeSmall * 2.5)
                     placeholderText: qsTr("Type a message...")
                     labelVisible: false
@@ -439,10 +444,6 @@ Page {
         }
     }
 
-    RemorsePopup {
-        id: remorse
-    }
-
     Notification {
         id: exportNotification
         appName: "SailCat"
@@ -576,6 +577,18 @@ Page {
         messageInput.focus = true
     }
 
+    function exportCurrentConversation() {
+        var path = conversationManager.exportConversation(conversationManager.currentConversationId())
+        if (path !== "") {
+            exportNotification.previewSummary = qsTr("Conversation exported")
+            exportNotification.previewBody = path
+        } else {
+            exportNotification.previewSummary = qsTr("Export failed")
+            exportNotification.previewBody = ""
+        }
+        exportNotification.publish()
+    }
+
     function regenerateLastResponse() {
         if (mistralApi.isBusy) return
 
@@ -596,8 +609,10 @@ Page {
         id: modelSelector
 
         onModelSelected: function(selectedModel) {
-            settingsManager.nextMessageModel = selectedModel
-            remorse.show(qsTr("Model changed to %1 for next message").arg(selectedModel))
+            settingsManager.modelName = selectedModel
+            exportNotification.previewSummary = qsTr("Model changed to %1").arg(selectedModel)
+            exportNotification.previewBody = ""
+            exportNotification.publish()
         }
     }
 }
