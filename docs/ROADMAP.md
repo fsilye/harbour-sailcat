@@ -39,7 +39,7 @@ Status legend: `todo` / `in progress` / `done`
 | # | Feature | Spec | Status |
 |---|---------|------|--------|
 | 11 | Chat UX: bottom menu, token banner, swipe to history | [11-ux-improvements.md](features/11-ux-improvements.md) | done (v1.9.15) |
-| 12 | Better markdown rendering | [12-markdown-rendering.md](features/12-markdown-rendering.md) | todo |
+| 12 | Better markdown rendering | [12-markdown-rendering.md](features/12-markdown-rendering.md) | done (v1.9.16) |
 | 13 | Pinned messages | [13-pinned-messages.md](features/13-pinned-messages.md) | todo |
 
 ## Already done (do not re-implement)

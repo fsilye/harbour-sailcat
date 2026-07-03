@@ -56,7 +56,7 @@ ListItem {
             rightMargin: role === "assistant" ? Theme.horizontalPageMargin * 2 : Theme.horizontalPageMargin
         }
         text: formatMarkdown(content)
-        textFormat: Text.StyledText
+        textFormat: Text.RichText
         wrapMode: Text.Wrap
         font.pixelSize: Theme.fontSizeSmall
         color: Theme.primaryColor
@@ -93,17 +93,31 @@ ListItem {
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
 
-        // Code blocks (```), stripping the optional language tag
-        formatted = formatted.replace(/```[a-zA-Z0-9+#-]*\n?([\s\S]*?)```/g, '<pre style="background-color: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px;">$1</pre>')
+        // Protect code from the formatting rules below: extract it,
+        // substitute placeholders, reinsert at the end
+        var codeBlocks = []
+        formatted = formatted.replace(/```[a-zA-Z0-9+#-]*\n?([\s\S]*?)```/g, function(match, code) {
+            if (code.charAt(code.length - 1) === '\n') {
+                code = code.slice(0, -1)
+            }
+            codeBlocks.push(code)
+            return '\x01' + (codeBlocks.length - 1) + '\x01'
+        })
 
-        // Inline code (`)
-        formatted = formatted.replace(/`([^`]+)`/g, '<code style="background-color: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 2px;">$1</code>')
+        var inlineCodes = []
+        formatted = formatted.replace(/`([^`\n]+)`/g, function(match, code) {
+            inlineCodes.push(code)
+            return '\x02' + (inlineCodes.length - 1) + '\x02'
+        })
 
         // Bold (**text**)
         formatted = formatted.replace(/\*\*([^\*]+)\*\*/g, '<b>$1</b>')
 
-        // Italic (*text*)
-        formatted = formatted.replace(/\*([^\*]+)\*/g, '<i>$1</i>')
+        // Italic (*text*), not adjacent to word chars or other asterisks
+        formatted = formatted.replace(/(^|[\s(])\*([^\*\n]+)\*($|[\s).,;:!?])/gm, '$1<i>$2</i>$3')
+
+        // Strikethrough (~~text~~)
+        formatted = formatted.replace(/~~([^~]+)~~/g, '<s>$1</s>')
 
         // Links [text](url)
         formatted = formatted.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2">$1</a>')
@@ -116,8 +130,17 @@ ListItem {
         // Bullet points (- item or * item)
         formatted = formatted.replace(/^[\-\*] (.+)$/gm, '• $1')
 
-        // Line breaks
+        // Line breaks (code is still tokenized, so <pre> newlines are preserved)
         formatted = formatted.replace(/\n/g, '<br>')
+
+        // Reinsert code, colored from the theme so it works on any ambience
+        var codeColor = "" + Theme.highlightColor
+        formatted = formatted.replace(/\x02(\d+)\x02/g, function(match, i) {
+            return '<tt><font color="' + codeColor + '">' + inlineCodes[parseInt(i, 10)] + '</font></tt>'
+        })
+        formatted = formatted.replace(/\x01(\d+)\x01/g, function(match, i) {
+            return '<pre><font color="' + codeColor + '">' + codeBlocks[parseInt(i, 10)] + '</font></pre>'
+        })
 
         return formatted
     }
