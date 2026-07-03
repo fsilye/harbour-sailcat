@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Nemo.Notifications 1.0
 
 Page {
     id: historyPage
@@ -96,6 +97,26 @@ Page {
                         pageStack.push(Qt.resolvedUrl("ConversationDetailPage.qml"), {
                             conversationId: model.id
                         })
+                    }
+                }
+                MenuItem {
+                    text: qsTr("Export")
+                    onClicked: {
+                        var path = conversationManager.exportConversation(model.id)
+                        if (path !== "") {
+                            exportNotification.previewSummary = qsTr("Conversation exported")
+                            exportNotification.previewBody = path
+                        } else {
+                            exportNotification.previewSummary = qsTr("Export failed")
+                            exportNotification.previewBody = ""
+                        }
+                        exportNotification.publish()
+                    }
+                }
+                MenuItem {
+                    text: qsTr("Copy as text")
+                    onClicked: {
+                        Clipboard.text = conversationManager.conversationToMarkdown(model.id)
                     }
                 }
                 MenuItem {
@@ -203,6 +224,11 @@ Page {
 
     RemorsePopup {
         id: remorse
+    }
+
+    Notification {
+        id: exportNotification
+        appName: "SailCat"
     }
 
     Component.onCompleted: {

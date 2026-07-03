@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Nemo.Notifications 1.0
 import "../components"
 
 Page {
@@ -46,6 +47,21 @@ Page {
             MenuItem {
                 text: qsTr("Change model for next message")
                 onClicked: modelSelector.open()
+            }
+            MenuItem {
+                text: qsTr("Export conversation")
+                enabled: conversationModel.count > 0
+                onClicked: {
+                    var path = conversationManager.exportConversation(conversationManager.currentConversationId())
+                    if (path !== "") {
+                        exportNotification.previewSummary = qsTr("Conversation exported")
+                        exportNotification.previewBody = path
+                    } else {
+                        exportNotification.previewSummary = qsTr("Export failed")
+                        exportNotification.previewBody = ""
+                    }
+                    exportNotification.publish()
+                }
             }
             MenuItem {
                 text: qsTr("New conversation")
@@ -379,6 +395,11 @@ Page {
 
     RemorsePopup {
         id: remorse
+    }
+
+    Notification {
+        id: exportNotification
+        appName: "SailCat"
     }
 
     // Connections to API

@@ -41,6 +41,9 @@ public:
     Q_INVOKABLE QVariantMap getStatistics() const;
     Q_INVOKABLE QVariantList searchConversations(const QString &query) const;
     Q_INVOKABLE void addTokenUsage(int promptTokens, int completionTokens);
+    Q_INVOKABLE QString currentConversationId() const;
+    Q_INVOKABLE QString conversationToMarkdown(const QString &conversationId) const;
+    Q_INVOKABLE QString exportConversation(const QString &conversationId) const;
 
     void loadAllConversations();
 

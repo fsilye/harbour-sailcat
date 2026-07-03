@@ -4,6 +4,10 @@
 #include <QUuid>
 #include <QJsonDocument>
 #include <QDebug>
+#include <QFile>
+#include <QTextStream>
+#include <QStandardPaths>
+#include <QRegExp>
 
 ConversationManager::ConversationManager(QObject *parent)
     : QObject(parent)
@@ -319,6 +323,79 @@ void ConversationManager::purgeAllConversations()
     createNewConversation();
 
     emit conversationCountChanged();
+}
+
+QString ConversationManager::currentConversationId() const
+{
+    return m_currentConversationId;
+}
+
+QString ConversationManager::conversationToMarkdown(const QString &conversationId) const
+{
+    for (const Conversation &conv : m_conversations) {
+        if (conv.id != conversationId) {
+            continue;
+        }
+
+        QString markdown;
+        markdown += "# " + (conv.title.isEmpty() ? tr("Untitled") : conv.title) + "\n\n";
+        markdown += QString("_Exported from SailCat - %1_\n\n")
+                .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm"));
+
+        for (const Message &msg : conv.messages) {
+            markdown += (msg.role == "user") ? "## User\n\n" : "## Assistant\n\n";
+            markdown += msg.content + "\n\n";
+        }
+        return markdown;
+    }
+    return QString();
+}
+
+QString ConversationManager::exportConversation(const QString &conversationId) const
+{
+    QString markdown = conversationToMarkdown(conversationId);
+    if (markdown.isEmpty()) {
+        return QString();
+    }
+
+    QString title;
+    for (const Conversation &conv : m_conversations) {
+        if (conv.id == conversationId) {
+            title = conv.title;
+            break;
+        }
+    }
+
+    // Filesystem-safe slug from the title
+    QString slug = title.toLower();
+    slug.replace(QRegExp("[^a-z0-9]+"), "-");
+    slug.replace(QRegExp("(^-+|-+$)"), "");
+    if (slug.length() > 40) {
+        slug = slug.left(40);
+    }
+    if (slug.isEmpty()) {
+        slug = "conversation";
+    }
+
+    QString dir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    QString path = QString("%1/sailcat-%2-%3.md")
+            .arg(dir)
+            .arg(slug)
+            .arg(QDateTime::currentDateTime().toString("yyyyMMdd-HHmmss"));
+
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qWarning() << "Export failed:" << file.errorString();
+        return QString();
+    }
+
+    QTextStream stream(&file);
+    // Qt 5.6 defaults to the locale codec; force UTF-8
+    stream.setCodec("UTF-8");
+    stream << markdown;
+    file.close();
+
+    return path;
 }
 
 void ConversationManager::addTokenUsage(int promptTokens, int completionTokens)
