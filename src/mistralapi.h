@@ -23,7 +23,9 @@ public:
 
     Q_INVOKABLE void sendMessage(const QString &apiKey,
                                    const QString &modelName,
-                                   const QVariant &messages);
+                                   const QVariant &messages,
+                                   double temperature = -1.0,
+                                   int maxTokens = 0);
     Q_INVOKABLE void generateTitle(const QString &apiKey,
                                      const QString &modelName,
                                      const QString &firstUserMessage);

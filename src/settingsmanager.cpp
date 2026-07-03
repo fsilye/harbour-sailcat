@@ -4,6 +4,8 @@ SettingsManager::SettingsManager(QObject *parent)
     : QObject(parent)
     , m_settings("harbour-sailcat", "SailCat")
     , m_useCustomKey(false)
+    , m_temperature(-1.0)
+    , m_maxTokens(0)
 {
     loadSettings();
 }
@@ -66,6 +68,34 @@ void SettingsManager::setLanguage(const QString &lang)
         m_language = lang;
         saveSettings();
         emit languageChanged();
+    }
+}
+
+double SettingsManager::temperature() const
+{
+    return m_temperature;
+}
+
+void SettingsManager::setTemperature(double temperature)
+{
+    if (m_temperature != temperature) {
+        m_temperature = temperature;
+        saveSettings();
+        emit temperatureChanged();
+    }
+}
+
+int SettingsManager::maxTokens() const
+{
+    return m_maxTokens;
+}
+
+void SettingsManager::setMaxTokens(int maxTokens)
+{
+    if (m_maxTokens != maxTokens) {
+        m_maxTokens = maxTokens;
+        saveSettings();
+        emit maxTokensChanged();
     }
 }
 
@@ -141,6 +171,8 @@ void SettingsManager::loadSettings()
     m_nextMessageModel = m_settings.value("nextMessageModel", "").toString();
     m_useCustomKey = m_settings.value("useCustomKey", false).toBool();
     m_language = m_settings.value("language", "en").toString();
+    m_temperature = m_settings.value("generation/temperature", -1.0).toDouble();
+    m_maxTokens = m_settings.value("generation/maxTokens", 0).toInt();
 }
 
 void SettingsManager::saveSettings()
@@ -154,5 +186,7 @@ void SettingsManager::saveSettings()
     }
     m_settings.setValue("useCustomKey", m_useCustomKey);
     m_settings.setValue("language", m_language);
+    m_settings.setValue("generation/temperature", m_temperature);
+    m_settings.setValue("generation/maxTokens", m_maxTokens);
     m_settings.sync();
 }

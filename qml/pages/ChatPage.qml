@@ -466,7 +466,8 @@ Page {
                           settingsManager.modelName
 
         conversationModel.addAssistantMessage("")
-        mistralApi.sendMessage(apiKey, actualModel, messages)
+        mistralApi.sendMessage(apiKey, actualModel, messages,
+                               settingsManager.temperature, settingsManager.maxTokens)
 
         // Reset next message model after sending
         settingsManager.resetNextMessageModel()

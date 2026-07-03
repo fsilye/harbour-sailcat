@@ -14,6 +14,8 @@ class SettingsManager : public QObject
     Q_PROPERTY(bool useCustomKey READ useCustomKey WRITE setUseCustomKey NOTIFY useCustomKeyChanged)
     Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)
     Q_PROPERTY(bool hasApiKey READ hasApiKey NOTIFY hasApiKeyChanged)
+    Q_PROPERTY(double temperature READ temperature WRITE setTemperature NOTIFY temperatureChanged)
+    Q_PROPERTY(int maxTokens READ maxTokens WRITE setMaxTokens NOTIFY maxTokensChanged)
 
 public:
     explicit SettingsManager(QObject *parent = nullptr);
@@ -33,6 +35,12 @@ public:
     QString language() const;
     void setLanguage(const QString &lang);
 
+    double temperature() const;
+    void setTemperature(double temperature);
+
+    int maxTokens() const;
+    void setMaxTokens(int maxTokens);
+
     bool hasApiKey() const;
 
     Q_INVOKABLE QStringList availableModels() const;
@@ -49,6 +57,8 @@ signals:
     void useCustomKeyChanged();
     void languageChanged();
     void hasApiKeyChanged();
+    void temperatureChanged();
+    void maxTokensChanged();
 
 private:
     QSettings m_settings;
@@ -57,6 +67,8 @@ private:
     QString m_nextMessageModel;
     bool m_useCustomKey;
     QString m_language;
+    double m_temperature;
+    int m_maxTokens;
 
     void loadSettings();
     void saveSettings();

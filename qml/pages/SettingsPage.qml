@@ -21,6 +21,11 @@ Dialog {
                             modelComboBox.currentItem.modelValue :
                             "mistral-small-latest"
         settingsManager.modelName = selectedModel
+
+        settingsManager.temperature = customTemperatureSwitch.checked ?
+                                      temperatureSlider.value : -1.0
+        settingsManager.maxTokens = limitTokensSwitch.checked ?
+                                    Math.round(maxTokensSlider.value) : 0
     }
 
     SilicaFlickable {
@@ -234,6 +239,49 @@ Dialog {
                 font.pixelSize: Theme.fontSizeExtraSmall
                 color: Theme.secondaryColor
                 wrapMode: Text.WordWrap
+            }
+
+            // Generation Parameters Section
+            SectionHeader {
+                text: qsTr("Generation")
+            }
+
+            TextSwitch {
+                id: customTemperatureSwitch
+                text: qsTr("Custom temperature")
+                description: qsTr("Lower is more focused, higher is more creative")
+                checked: settingsManager.temperature >= 0.0
+            }
+
+            Slider {
+                id: temperatureSlider
+                width: parent.width
+                visible: customTemperatureSwitch.checked
+                minimumValue: 0.0
+                maximumValue: 1.5
+                stepSize: 0.1
+                value: settingsManager.temperature >= 0.0 ? settingsManager.temperature : 0.7
+                valueText: value.toFixed(1)
+                label: qsTr("Temperature")
+            }
+
+            TextSwitch {
+                id: limitTokensSwitch
+                text: qsTr("Limit response length")
+                description: qsTr("Maximum number of tokens per response")
+                checked: settingsManager.maxTokens > 0
+            }
+
+            Slider {
+                id: maxTokensSlider
+                width: parent.width
+                visible: limitTokensSwitch.checked
+                minimumValue: 256
+                maximumValue: 8192
+                stepSize: 256
+                value: settingsManager.maxTokens > 0 ? settingsManager.maxTokens : 1024
+                valueText: Math.round(value)
+                label: qsTr("Max tokens")
             }
 
             // About Section

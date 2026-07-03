@@ -31,7 +31,9 @@ QString MistralAPI::error() const
 
 void MistralAPI::sendMessage(const QString &apiKey,
                                const QString &modelName,
-                               const QVariant &messagesVariant)
+                               const QVariant &messagesVariant,
+                               double temperature,
+                               int maxTokens)
 {
     if (m_isBusy) {
         qWarning() << "Request already in progress";
@@ -70,6 +72,14 @@ void MistralAPI::sendMessage(const QString &apiKey,
     requestBody["model"] = modelName;
     requestBody["messages"] = messages;
     requestBody["stream"] = true;
+
+    // Omit unset parameters so the API applies its own defaults
+    if (temperature >= 0.0) {
+        requestBody["temperature"] = temperature;
+    }
+    if (maxTokens > 0) {
+        requestBody["max_tokens"] = maxTokens;
+    }
 
     QJsonDocument doc(requestBody);
     QByteArray jsonData = doc.toJson();
