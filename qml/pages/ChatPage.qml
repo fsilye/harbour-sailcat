@@ -460,6 +460,10 @@ Page {
         var apiKey = settingsManager.apiKey
         var messages = conversationModel.getMessagesForApi()
 
+        if (settingsManager.systemPrompt !== "") {
+            messages = [{ "role": "system", "content": settingsManager.systemPrompt }].concat(messages)
+        }
+
         // Use nextMessageModel if set, otherwise use default model
         var actualModel = settingsManager.nextMessageModel !== "" ?
                           settingsManager.nextMessageModel :

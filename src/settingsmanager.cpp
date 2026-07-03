@@ -99,6 +99,20 @@ void SettingsManager::setMaxTokens(int maxTokens)
     }
 }
 
+QString SettingsManager::systemPrompt() const
+{
+    return m_systemPrompt;
+}
+
+void SettingsManager::setSystemPrompt(const QString &prompt)
+{
+    if (m_systemPrompt != prompt) {
+        m_systemPrompt = prompt;
+        saveSettings();
+        emit systemPromptChanged();
+    }
+}
+
 QStringList SettingsManager::availableModels() const
 {
     return QStringList()
@@ -173,6 +187,7 @@ void SettingsManager::loadSettings()
     m_language = m_settings.value("language", "en").toString();
     m_temperature = m_settings.value("generation/temperature", -1.0).toDouble();
     m_maxTokens = m_settings.value("generation/maxTokens", 0).toInt();
+    m_systemPrompt = m_settings.value("generation/systemPrompt", "").toString();
 }
 
 void SettingsManager::saveSettings()
@@ -188,5 +203,6 @@ void SettingsManager::saveSettings()
     m_settings.setValue("language", m_language);
     m_settings.setValue("generation/temperature", m_temperature);
     m_settings.setValue("generation/maxTokens", m_maxTokens);
+    m_settings.setValue("generation/systemPrompt", m_systemPrompt);
     m_settings.sync();
 }

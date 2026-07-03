@@ -26,6 +26,12 @@ Dialog {
                                       temperatureSlider.value : -1.0
         settingsManager.maxTokens = limitTokensSwitch.checked ?
                                     Math.round(maxTokensSlider.value) : 0
+
+        if (systemPromptComboBox.currentItem) {
+            var preset = systemPromptComboBox.currentItem.promptValue
+            settingsManager.systemPrompt = preset === "__custom__" ?
+                                           customPromptArea.text.trim() : preset
+        }
     }
 
     SilicaFlickable {
@@ -282,6 +288,72 @@ Dialog {
                 value: settingsManager.maxTokens > 0 ? settingsManager.maxTokens : 1024
                 valueText: Math.round(value)
                 label: qsTr("Max tokens")
+            }
+
+            // System Prompt Section
+            SectionHeader {
+                text: qsTr("System prompt")
+            }
+
+            ComboBox {
+                id: systemPromptComboBox
+                label: qsTr("Persona")
+                description: qsTr("Instruction sent before every conversation")
+                width: parent.width
+
+                // Preset prompts are sent to the API: keep them in English, untranslated
+                property var presets: [
+                    { name: qsTr("None"), value: "" },
+                    { name: qsTr("Concise"), value: "Be concise. Answer directly without filler or repetition." },
+                    { name: qsTr("Translator"), value: "You are a translator. Translate the user's message to English if it is in another language, otherwise to French. Output only the translation." },
+                    { name: qsTr("Code assistant"), value: "You are a programming assistant. Prefer short code examples. Assume the user is an experienced developer." },
+                    { name: qsTr("Custom"), value: "__custom__" }
+                ]
+
+                menu: ContextMenu {
+                    Repeater {
+                        model: systemPromptComboBox.presets
+
+                        MenuItem {
+                            text: modelData.name
+                            property string promptValue: modelData.value
+                        }
+                    }
+                }
+
+                Component.onCompleted: {
+                    var current = settingsManager.systemPrompt
+                    if (current === "") {
+                        currentIndex = 0
+                        return
+                    }
+                    for (var i = 1; i < presets.length - 1; i++) {
+                        if (presets[i].value === current) {
+                            currentIndex = i
+                            return
+                        }
+                    }
+                    currentIndex = presets.length - 1  // Custom
+                }
+            }
+
+            TextArea {
+                id: customPromptArea
+                width: parent.width
+                visible: systemPromptComboBox.currentItem &&
+                         systemPromptComboBox.currentItem.promptValue === "__custom__"
+                label: qsTr("Custom system prompt")
+                placeholderText: qsTr("Enter a custom system prompt...")
+
+                Component.onCompleted: {
+                    var current = settingsManager.systemPrompt
+                    if (current === "") return
+                    var presets = systemPromptComboBox.presets
+                    for (var i = 1; i < presets.length - 1; i++) {
+                        if (presets[i].value === current) return
+                    }
+                    text = current
+                }
             }
 
             // About Section

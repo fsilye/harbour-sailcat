@@ -16,6 +16,7 @@ class SettingsManager : public QObject
     Q_PROPERTY(bool hasApiKey READ hasApiKey NOTIFY hasApiKeyChanged)
     Q_PROPERTY(double temperature READ temperature WRITE setTemperature NOTIFY temperatureChanged)
     Q_PROPERTY(int maxTokens READ maxTokens WRITE setMaxTokens NOTIFY maxTokensChanged)
+    Q_PROPERTY(QString systemPrompt READ systemPrompt WRITE setSystemPrompt NOTIFY systemPromptChanged)
 
 public:
     explicit SettingsManager(QObject *parent = nullptr);
@@ -41,6 +42,9 @@ public:
     int maxTokens() const;
     void setMaxTokens(int maxTokens);
 
+    QString systemPrompt() const;
+    void setSystemPrompt(const QString &prompt);
+
     bool hasApiKey() const;
 
     Q_INVOKABLE QStringList availableModels() const;
@@ -59,6 +63,7 @@ signals:
     void hasApiKeyChanged();
     void temperatureChanged();
     void maxTokensChanged();
+    void systemPromptChanged();
 
 private:
     QSettings m_settings;
@@ -69,6 +74,7 @@ private:
     QString m_language;
     double m_temperature;
     int m_maxTokens;
+    QString m_systemPrompt;
 
     void loadSettings();
     void saveSettings();
