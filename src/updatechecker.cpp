@@ -5,7 +5,7 @@
 #include <QDebug>
 
 #ifndef APP_VERSION
-#define APP_VERSION "1.9.22"
+#define APP_VERSION "2.0.0"
 #endif
 
 UpdateChecker::UpdateChecker(QObject *parent)

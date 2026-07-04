@@ -4,7 +4,7 @@ CONFIG += sailfishapp
 
 # Version is passed by the spec file (%qmake5 VERSION=%{version})
 isEmpty(VERSION) {
-    VERSION = 1.9.6
+    VERSION = 2.0.0
 }
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
