@@ -26,52 +26,69 @@ Dialog {
         }
     }
 
-    DialogHeader {
-        title: qsTr("Select Model")
+    ListModel {
+        id: modelListModel
     }
 
-    SilicaFlickable {
+    SilicaListView {
         anchors.fill: parent
+        model: modelListModel
 
-        ListModel {
-            id: modelListModel
+        // As the list header, the dialog banner keeps the items below it
+        header: DialogHeader {
+            title: qsTr("Select Model")
         }
 
-        ListView {
-            anchors.fill: parent
-            model: modelListModel
-            delegate: ListItem {
-                width: parent.width
-                contentHeight: Theme.itemSizeMedium
+        delegate: ListItem {
+            id: modelItem
+            width: parent.width
+            contentHeight: itemColumn.height + Theme.paddingMedium * 2
 
-                onClicked: {
-                    modelSelectorDialog.accept()
-                    onModelSelected(value)
+            onClicked: {
+                modelSelectorDialog.accept()
+                onModelSelected(value)
+            }
+
+            Column {
+                id: itemColumn
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    leftMargin: Theme.horizontalPageMargin
+                    rightMargin: Theme.horizontalPageMargin
+                    verticalCenter: parent.verticalCenter
+                }
+                spacing: Theme.paddingSmall
+
+                Label {
+                    width: parent.width
+                    text: name
+                    font.pixelSize: Theme.fontSizeMedium
+                    color: modelItem.highlighted ? Theme.highlightColor : Theme.primaryColor
+                    truncationMode: TruncationMode.Fade
+
+                    // Mark the active model
+                    Icon {
+                        anchors {
+                            right: parent.right
+                            verticalCenter: parent.verticalCenter
+                        }
+                        source: "image://theme/icon-s-accept"
+                        visible: value === settingsManager.modelName
+                    }
                 }
 
-                Column {
-                    anchors {
-                        left: parent.left
-                        right: parent.right
-                        leftMargin: Theme.horizontalPageMargin
-                        rightMargin: Theme.horizontalPageMargin
-                        verticalCenter: parent.verticalCenter
-                    }
-                    spacing: Theme.paddingSmall
-
-                    Label {
-                        text: name
-                        font.pixelSize: Theme.fontSizeMedium
-                    }
-
-                    Label {
-                        text: desc
-                        font.pixelSize: Theme.fontSizeExtraSmall
-                        color: Theme.secondaryColor
-                        wrapMode: Text.WordWrap
-                    }
+                Label {
+                    width: parent.width
+                    text: desc
+                    visible: desc !== ""
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                    color: Theme.secondaryColor
+                    wrapMode: Text.WordWrap
                 }
             }
         }
+
+        VerticalScrollDecorator {}
     }
 }
