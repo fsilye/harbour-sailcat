@@ -775,6 +775,21 @@ This application is free software. You are free to use, modify, and distribute i
             <source>No conversation</source>
             <translation>Ei keskustelua</translation>
         </message>
+        <message numerus="yes">
+            <source>%n conversation(s)</source>
+            <translation>
+                <numerusform>%n keskustelu</numerusform>
+                <numerusform>%n keskustelua</numerusform>
+            </translation>
+        </message>
+        <message>
+            <source>Tokens this month: %1</source>
+            <translation>Tokenit tässä kuussa: %1</translation>
+        </message>
+        <message>
+            <source>Tokens: %1</source>
+            <translation>Tokenit: %1</translation>
+        </message>
     </context>
     <context>
         <name>ModelSelector</name>
@@ -938,6 +953,106 @@ This application is free software. You are free to use, modify, and distribute i
         <message>
             <source>You: %1 chars</source>
             <translation>Sinä: %1 merkkiä</translation>
+        </message>
+        <message>
+            <source>%1 abandoned</source>
+            <translation>%1 hylättyä</translation>
+        </message>
+        <message>
+            <source>%1 chars</source>
+            <translation>%1 merkkiä</translation>
+        </message>
+        <message>
+            <source>%1 model switches</source>
+            <translation>%1 mallinvaihtoa</translation>
+        </message>
+        <message>
+            <source>Average hour: %1h</source>
+            <translation>Keskimääräinen tunti: %1</translation>
+        </message>
+        <message>
+            <source>Avg: %1min</source>
+            <translation>Ka. %1min</translation>
+        </message>
+        <message>
+            <source>Avg: %1s</source>
+            <translation>Ka. %1s</translation>
+        </message>
+        <message>
+            <source>Badges</source>
+            <translation>Kunniamerkit</translation>
+        </message>
+        <message>
+            <source>Chaotic</source>
+            <translation>Kaoottinen</translation>
+        </message>
+        <message>
+            <source>Concise</source>
+            <translation>Tiivis</translation>
+        </message>
+        <message>
+            <source>Conversation Ghost</source>
+            <translation>Keskusteluhaamu</translation>
+        </message>
+        <message>
+            <source>Early Bird</source>
+            <translation>Aamuvirkku</translation>
+        </message>
+        <message>
+            <source>Explorer</source>
+            <translation>Tutkija</translation>
+        </message>
+        <message>
+            <source>Finisher</source>
+            <translation>Viimeistelijä</translation>
+        </message>
+        <message>
+            <source>Ghost</source>
+            <translation>Haamu</translation>
+        </message>
+        <message>
+            <source>Longest Message</source>
+            <translation>Pisin viesti</translation>
+        </message>
+        <message>
+            <source>Loyal</source>
+            <translation>Uskollinen</translation>
+        </message>
+        <message>
+            <source>Model Hopper</source>
+            <translation>Mallihyppijä</translation>
+        </message>
+        <message>
+            <source>Night Owl</source>
+            <translation>Yökyöpeli</translation>
+        </message>
+        <message>
+            <source>Normal</source>
+            <translation>Tavallinen</translation>
+        </message>
+        <message>
+            <source>Novelist</source>
+            <translation>Romaanikirjailija</translation>
+        </message>
+        <message>
+            <source>Snail</source>
+            <translation>Etana</translation>
+        </message>
+        <message>
+            <source>Speed Typist</source>
+            <translation>Pikanäppäilijä</translation>
+        </message>
+        <message>
+            <source>Speedy</source>
+            <translation>Salamannopea</translation>
+        </message>
+        <message>
+            <source>Top words in AI replies</source>
+            <translation>Tekoälyn yleisimmät sanat</translation>
+        </message>
+        <message>
+            <source>Wanderer</source>
+            <translation>Vaeltaja</translation>
         </message>
     </context>
 </TS>

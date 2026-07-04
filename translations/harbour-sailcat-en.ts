@@ -787,6 +787,21 @@ This application is free software. You are free to use, modify, and distribute i
             <source>No conversation</source>
             <translation>No conversation</translation>
         </message>
+        <message numerus="yes">
+            <source>%n conversation(s)</source>
+            <translation>
+                <numerusform>%n conversation</numerusform>
+                <numerusform>%n conversations</numerusform>
+            </translation>
+        </message>
+        <message>
+            <source>Tokens this month: %1</source>
+            <translation>Tokens this month: %1</translation>
+        </message>
+        <message>
+            <source>Tokens: %1</source>
+            <translation>Tokens: %1</translation>
+        </message>
     </context>
     <context>
         <name>ModelSelector</name>
@@ -950,6 +965,106 @@ This application is free software. You are free to use, modify, and distribute i
         <message>
             <source>You: %1 chars</source>
             <translation>You: %1 chars</translation>
+        </message>
+        <message>
+            <source>%1 abandoned</source>
+            <translation>%1 abandoned</translation>
+        </message>
+        <message>
+            <source>%1 chars</source>
+            <translation>%1 chars</translation>
+        </message>
+        <message>
+            <source>%1 model switches</source>
+            <translation>%1 model switches</translation>
+        </message>
+        <message>
+            <source>Average hour: %1h</source>
+            <translation>Average hour: %1h</translation>
+        </message>
+        <message>
+            <source>Avg: %1min</source>
+            <translation>Avg: %1min</translation>
+        </message>
+        <message>
+            <source>Avg: %1s</source>
+            <translation>Avg: %1s</translation>
+        </message>
+        <message>
+            <source>Badges</source>
+            <translation>Badges</translation>
+        </message>
+        <message>
+            <source>Chaotic</source>
+            <translation>Chaotic</translation>
+        </message>
+        <message>
+            <source>Concise</source>
+            <translation>Concise</translation>
+        </message>
+        <message>
+            <source>Conversation Ghost</source>
+            <translation>Conversation Ghost</translation>
+        </message>
+        <message>
+            <source>Early Bird</source>
+            <translation>Early Bird</translation>
+        </message>
+        <message>
+            <source>Explorer</source>
+            <translation>Explorer</translation>
+        </message>
+        <message>
+            <source>Finisher</source>
+            <translation>Finisher</translation>
+        </message>
+        <message>
+            <source>Ghost</source>
+            <translation>Ghost</translation>
+        </message>
+        <message>
+            <source>Longest Message</source>
+            <translation>Longest Message</translation>
+        </message>
+        <message>
+            <source>Loyal</source>
+            <translation>Loyal</translation>
+        </message>
+        <message>
+            <source>Model Hopper</source>
+            <translation>Model Hopper</translation>
+        </message>
+        <message>
+            <source>Night Owl</source>
+            <translation>Night Owl</translation>
+        </message>
+        <message>
+            <source>Normal</source>
+            <translation>Normal</translation>
+        </message>
+        <message>
+            <source>Novelist</source>
+            <translation>Novelist</translation>
+        </message>
+        <message>
+            <source>Snail</source>
+            <translation>Snail</translation>
+        </message>
+        <message>
+            <source>Speed Typist</source>
+            <translation>Speed Typist</translation>
+        </message>
+        <message>
+            <source>Speedy</source>
+            <translation>Speedy</translation>
+        </message>
+        <message>
+            <source>Top words in AI replies</source>
+            <translation>Top words in AI replies</translation>
+        </message>
+        <message>
+            <source>Wanderer</source>
+            <translation>Wanderer</translation>
         </message>
     </context>
 </TS>

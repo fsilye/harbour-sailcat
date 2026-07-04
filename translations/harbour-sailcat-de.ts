@@ -775,6 +775,21 @@ This application is free software. You are free to use, modify, and distribute i
             <source>No conversation</source>
             <translation>Keine Unterhaltung</translation>
         </message>
+        <message numerus="yes">
+            <source>%n conversation(s)</source>
+            <translation>
+                <numerusform>%n Unterhaltung</numerusform>
+                <numerusform>%n Unterhaltungen</numerusform>
+            </translation>
+        </message>
+        <message>
+            <source>Tokens this month: %1</source>
+            <translation>Tokens diesen Monat: %1</translation>
+        </message>
+        <message>
+            <source>Tokens: %1</source>
+            <translation>Tokens: %1</translation>
+        </message>
     </context>
     <context>
         <name>ModelSelector</name>
@@ -938,6 +953,106 @@ This application is free software. You are free to use, modify, and distribute i
         <message>
             <source>You: %1 chars</source>
             <translation>Sie: %1 Zeichen</translation>
+        </message>
+        <message>
+            <source>%1 abandoned</source>
+            <translation>%1 aufgegeben</translation>
+        </message>
+        <message>
+            <source>%1 chars</source>
+            <translation>%1 Zeichen</translation>
+        </message>
+        <message>
+            <source>%1 model switches</source>
+            <translation>%1 Modellwechsel</translation>
+        </message>
+        <message>
+            <source>Average hour: %1h</source>
+            <translation>Durchschnittszeit: %1 Uhr</translation>
+        </message>
+        <message>
+            <source>Avg: %1min</source>
+            <translation>Ø %1min</translation>
+        </message>
+        <message>
+            <source>Avg: %1s</source>
+            <translation>Ø %1s</translation>
+        </message>
+        <message>
+            <source>Badges</source>
+            <translation>Abzeichen</translation>
+        </message>
+        <message>
+            <source>Chaotic</source>
+            <translation>Chaotisch</translation>
+        </message>
+        <message>
+            <source>Concise</source>
+            <translation>Prägnant</translation>
+        </message>
+        <message>
+            <source>Conversation Ghost</source>
+            <translation>Gesprächsgeist</translation>
+        </message>
+        <message>
+            <source>Early Bird</source>
+            <translation>Frühaufsteher</translation>
+        </message>
+        <message>
+            <source>Explorer</source>
+            <translation>Entdecker</translation>
+        </message>
+        <message>
+            <source>Finisher</source>
+            <translation>Vollender</translation>
+        </message>
+        <message>
+            <source>Ghost</source>
+            <translation>Geist</translation>
+        </message>
+        <message>
+            <source>Longest Message</source>
+            <translation>Längste Nachricht</translation>
+        </message>
+        <message>
+            <source>Loyal</source>
+            <translation>Treu</translation>
+        </message>
+        <message>
+            <source>Model Hopper</source>
+            <translation>Modell-Hopper</translation>
+        </message>
+        <message>
+            <source>Night Owl</source>
+            <translation>Nachteule</translation>
+        </message>
+        <message>
+            <source>Normal</source>
+            <translation>Normal</translation>
+        </message>
+        <message>
+            <source>Novelist</source>
+            <translation>Romanautor</translation>
+        </message>
+        <message>
+            <source>Snail</source>
+            <translation>Schnecke</translation>
+        </message>
+        <message>
+            <source>Speed Typist</source>
+            <translation>Schnellschreiber</translation>
+        </message>
+        <message>
+            <source>Speedy</source>
+            <translation>Blitzschnell</translation>
+        </message>
+        <message>
+            <source>Top words in AI replies</source>
+            <translation>Häufigste Wörter der KI</translation>
+        </message>
+        <message>
+            <source>Wanderer</source>
+            <translation>Wanderer</translation>
         </message>
     </context>
 </TS>

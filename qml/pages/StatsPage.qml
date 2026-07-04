@@ -16,7 +16,68 @@ Page {
     property int maxTokensDay: maxOf(tokensPerDay)
     property var categoryList: buildCategoryList()
     property int maxCategoryCount: categoryList.length > 0 ? categoryList[0].count : 1
+    property var funStats: conversationManager.getFunStats()
+    property var topWords: funStats.topWords || []
+    property var badges: buildBadges()
     property real chartProgress: 0
+
+    function buildBadges() {
+        var list = []
+
+        var switches = settingsManager.modelSwitches()
+        list.push({
+            name: qsTr("Model Hopper"),
+            tier: switches < 5 ? qsTr("Loyal") : switches <= 20 ? qsTr("Explorer") : qsTr("Chaotic"),
+            level: switches < 5 ? 0 : switches <= 20 ? 1 : 2,
+            detail: qsTr("%1 model switches").arg(switches)
+        })
+
+        var longest = funStats.longestUserChars || 0
+        list.push({
+            name: qsTr("Longest Message"),
+            tier: longest < 280 ? qsTr("Concise") : longest <= 2000 ? qsTr("Novelist") : "TL;DR",
+            level: longest < 280 ? 0 : longest <= 2000 ? 1 : 2,
+            detail: qsTr("%1 chars").arg(longest)
+        })
+
+        var hour = funStats.avgSendHour
+        if (hour >= 0) {
+            list.push({
+                name: qsTr("Night Owl"),
+                tier: hour < 6 ? qsTr("Night Owl") : hour < 12 ? qsTr("Early Bird") : qsTr("Normal"),
+                level: hour < 6 ? 2 : hour < 12 ? 0 : 1,
+                detail: qsTr("Average hour: %1h").arg(hour)
+            })
+        }
+
+        var gap = funStats.avgGapSecs
+        if (gap >= 0) {
+            list.push({
+                name: qsTr("Speed Typist"),
+                tier: gap < 10 ? qsTr("Speedy") : gap > 300 ? qsTr("Snail") : qsTr("Normal"),
+                level: gap < 10 ? 2 : gap > 300 ? 0 : 1,
+                detail: gap < 60 ? qsTr("Avg: %1s").arg(gap) : qsTr("Avg: %1min").arg(Math.round(gap / 60))
+            })
+        }
+
+        var ghosts = funStats.ghostCount || 0
+        list.push({
+            name: qsTr("Conversation Ghost"),
+            tier: ghosts === 0 ? qsTr("Finisher") : ghosts <= 5 ? qsTr("Wanderer") : qsTr("Ghost"),
+            level: ghosts === 0 ? 0 : ghosts <= 5 ? 1 : 2,
+            detail: qsTr("%1 abandoned").arg(ghosts)
+        })
+
+        return list
+    }
+
+    function badgeColor(level) {
+        switch (level) {
+        case 0: return "#aed581"
+        case 1: return "#ffb74d"
+        default: return "#f06292"
+        }
+    }
 
     function buildCategoryList() {
         var counts = stats.categoryCounts || {}
@@ -443,6 +504,122 @@ Page {
                         text: "23h"
                         color: Theme.secondaryColor
                         font.pixelSize: Theme.fontSizeExtraSmall
+                    }
+                }
+            }
+
+            // Badges
+            SectionHeader {
+                text: qsTr("Badges")
+                visible: (stats.totalMessages || 0) > 0
+            }
+
+            Grid {
+                id: badgesGrid
+                columns: 2
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                columnSpacing: Theme.paddingMedium
+                rowSpacing: Theme.paddingMedium
+                visible: (stats.totalMessages || 0) > 0
+
+                Repeater {
+                    model: statsPage.badges
+
+                    Rectangle {
+                        width: (badgesGrid.width - badgesGrid.columnSpacing) / 2
+                        height: Theme.itemSizeLarge + Theme.paddingMedium
+                        radius: Theme.paddingSmall
+                        color: Theme.rgba(badgeColor(modelData.level), 0.15)
+                        border.color: Theme.rgba(badgeColor(modelData.level), 0.5)
+                        border.width: 1
+
+                        Column {
+                            anchors.centerIn: parent
+                            width: parent.width - Theme.paddingMedium * 2
+
+                            Label {
+                                width: parent.width
+                                horizontalAlignment: Text.AlignHCenter
+                                text: modelData.tier
+                                color: badgeColor(modelData.level)
+                                font.pixelSize: Theme.fontSizeMedium
+                                font.bold: true
+                                truncationMode: TruncationMode.Fade
+                            }
+
+                            Label {
+                                width: parent.width
+                                horizontalAlignment: Text.AlignHCenter
+                                text: modelData.name
+                                color: Theme.primaryColor
+                                font.pixelSize: Theme.fontSizeExtraSmall
+                                truncationMode: TruncationMode.Fade
+                            }
+
+                            Label {
+                                width: parent.width
+                                horizontalAlignment: Text.AlignHCenter
+                                text: modelData.detail
+                                color: Theme.secondaryColor
+                                font.pixelSize: Theme.fontSizeTiny
+                                truncationMode: TruncationMode.Fade
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Most frequent words in assistant replies
+            SectionHeader {
+                text: qsTr("Top words in AI replies")
+                visible: statsPage.topWords.length > 0
+            }
+
+            Column {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                spacing: Theme.paddingSmall
+                visible: statsPage.topWords.length > 0
+
+                Repeater {
+                    model: statsPage.topWords
+
+                    Item {
+                        width: parent.width
+                        height: Theme.fontSizeSmall + Theme.paddingMedium
+
+                        Label {
+                            id: wordLabel
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width * 0.3
+                            text: modelData.word
+                            font.pixelSize: Theme.fontSizeExtraSmall
+                            color: Theme.primaryColor
+                            truncationMode: TruncationMode.Fade
+                        }
+
+                        Rectangle {
+                            anchors {
+                                left: wordLabel.right
+                                leftMargin: Theme.paddingMedium
+                                verticalCenter: parent.verticalCenter
+                            }
+                            height: Theme.paddingMedium
+                            radius: height / 2
+                            color: Theme.highlightColor
+                            width: (parent.width * 0.5) * statsPage.chartProgress
+                                   * modelData.count / Math.max(1, statsPage.topWords[0].count)
+                        }
+
+                        Label {
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: modelData.count
+                            font.pixelSize: Theme.fontSizeExtraSmall
+                            color: Theme.secondaryColor
+                        }
                     }
                 }
             }

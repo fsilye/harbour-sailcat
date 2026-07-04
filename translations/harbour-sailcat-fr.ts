@@ -787,6 +787,21 @@ Cette application est un logiciel libre. Vous êtes libre de l'utiliser, de la m
             <source>No conversation</source>
             <translation>Aucune conversation</translation>
         </message>
+        <message numerus="yes">
+            <source>%n conversation(s)</source>
+            <translation>
+                <numerusform>%n conversation</numerusform>
+                <numerusform>%n conversations</numerusform>
+            </translation>
+        </message>
+        <message>
+            <source>Tokens this month: %1</source>
+            <translation>Tokens ce mois-ci : %1</translation>
+        </message>
+        <message>
+            <source>Tokens: %1</source>
+            <translation>Tokens : %1</translation>
+        </message>
     </context>
     <context>
         <name>ModelSelector</name>
@@ -950,6 +965,106 @@ Cette application est un logiciel libre. Vous êtes libre de l'utiliser, de la m
         <message>
             <source>You: %1 chars</source>
             <translation>Vous : %1 caractères</translation>
+        </message>
+        <message>
+            <source>%1 abandoned</source>
+            <translation>%1 abandonnées</translation>
+        </message>
+        <message>
+            <source>%1 chars</source>
+            <translation>%1 caractères</translation>
+        </message>
+        <message>
+            <source>%1 model switches</source>
+            <translation>%1 changements de modèle</translation>
+        </message>
+        <message>
+            <source>Average hour: %1h</source>
+            <translation>Heure moyenne : %1h</translation>
+        </message>
+        <message>
+            <source>Avg: %1min</source>
+            <translation>Moy. : %1min</translation>
+        </message>
+        <message>
+            <source>Avg: %1s</source>
+            <translation>Moy. : %1s</translation>
+        </message>
+        <message>
+            <source>Badges</source>
+            <translation>Badges</translation>
+        </message>
+        <message>
+            <source>Chaotic</source>
+            <translation>Chaotique</translation>
+        </message>
+        <message>
+            <source>Concise</source>
+            <translation>Concis</translation>
+        </message>
+        <message>
+            <source>Conversation Ghost</source>
+            <translation>Fantôme des conversations</translation>
+        </message>
+        <message>
+            <source>Early Bird</source>
+            <translation>Lève-tôt</translation>
+        </message>
+        <message>
+            <source>Explorer</source>
+            <translation>Explorateur</translation>
+        </message>
+        <message>
+            <source>Finisher</source>
+            <translation>Finisseur</translation>
+        </message>
+        <message>
+            <source>Ghost</source>
+            <translation>Fantôme</translation>
+        </message>
+        <message>
+            <source>Longest Message</source>
+            <translation>Message le plus long</translation>
+        </message>
+        <message>
+            <source>Loyal</source>
+            <translation>Fidèle</translation>
+        </message>
+        <message>
+            <source>Model Hopper</source>
+            <translation>Model Hopper</translation>
+        </message>
+        <message>
+            <source>Night Owl</source>
+            <translation>Oiseau de nuit</translation>
+        </message>
+        <message>
+            <source>Normal</source>
+            <translation>Normal</translation>
+        </message>
+        <message>
+            <source>Novelist</source>
+            <translation>Romancier</translation>
+        </message>
+        <message>
+            <source>Snail</source>
+            <translation>Escargot</translation>
+        </message>
+        <message>
+            <source>Speed Typist</source>
+            <translation>Dactylo express</translation>
+        </message>
+        <message>
+            <source>Speedy</source>
+            <translation>Éclair</translation>
+        </message>
+        <message>
+            <source>Top words in AI replies</source>
+            <translation>Mots les plus fréquents de l'IA</translation>
+        </message>
+        <message>
+            <source>Wanderer</source>
+            <translation>Vagabond</translation>
         </message>
     </context>
 </TS>

@@ -45,6 +45,7 @@ Status legend: `todo` / `in progress` / `done`
 | 15 | Animated stats & graphs in conversation pages | [15-inline-stats-graphs.md](features/15-inline-stats-graphs.md) | done (v1.9.20) |
 | 16 | Usability: full menus everywhere, model button | [16-usability.md](features/16-usability.md) | done (v1.9.21) |
 | 17 | Question categories & meaningful stats | [17-categories-and-real-stats.md](features/17-categories-and-real-stats.md) | done (v1.9.22) |
+| 18 | Fun stats, badges & cover mini-stats | [18-fun-stats-badges.md](features/18-fun-stats-badges.md) | done (v2.0.3) |
 
 ## Already done (do not re-implement)
 

@@ -11,6 +11,10 @@
 #include <QImage>
 #include <QBuffer>
 #include <QUrl>
+#include <QSet>
+#include <QHash>
+#include <QPair>
+#include <algorithm>
 
 ConversationManager::ConversationManager(QObject *parent)
     : QObject(parent)
@@ -588,6 +592,96 @@ QVariantMap ConversationManager::getConversationStatistics(const QString &conver
         stats["rhythm"] = rhythm;
         break;
     }
+
+    return stats;
+}
+
+QVariantMap ConversationManager::getFunStats() const
+{
+    QVariantMap stats;
+
+    // Common words not worth counting (French + English, all >= 4 chars)
+    static const QSet<QString> stopWords = QSet<QString>::fromList(QString(
+        "dans avec pour vous nous votre plus mais tout tous toute toutes elle elles cette comme "
+        "aussi être fait faire peut cela sont donc entre sans sous vers leurs leur notre deux "
+        "trois bien très voici ainsi alors avoir même mêmes autres autre chaque quand quelques "
+        "peuvent exemple selon partie utiliser this that with from have your will which they "
+        "them then than when what also more some such only very into over each other about "
+        "would could should there their these those been does just like make made need want "
+        "know time using used use example based here most however through while where because")
+        .split(' '));
+
+    QHash<QString, int> wordCounts;
+    int longestUserChars = 0;
+    qint64 hourSum = 0;
+    int hourCount = 0;
+    qint64 gapSum = 0;
+    int gapCount = 0;
+    int ghostCount = 0;
+
+    for (const Conversation &conv : m_conversations) {
+        int userCount = 0;
+        qint64 lastUserTs = 0;
+
+        for (const Message &msg : conv.messages) {
+            if (msg.role == "user") {
+                userCount++;
+                longestUserChars = qMax(longestUserChars, msg.content.length());
+
+                if (msg.timestamp > 0) {
+                    hourSum += QDateTime::fromMSecsSinceEpoch(msg.timestamp).time().hour();
+                    hourCount++;
+
+                    if (lastUserTs > 0) {
+                        qint64 gap = (msg.timestamp - lastUserTs) / 1000;
+                        // Ignore long pauses: they are separate sessions, not typing speed
+                        if (gap > 0 && gap < 1800) {
+                            gapSum += gap;
+                            gapCount++;
+                        }
+                    }
+                    lastUserTs = msg.timestamp;
+                }
+            } else {
+                const QStringList words = msg.content.toLower().split(
+                            QRegExp(QString::fromUtf8("[^a-zà-öø-ÿ]+")), QString::SkipEmptyParts);
+                for (const QString &word : words) {
+                    if (word.length() >= 4 && !stopWords.contains(word)) {
+                        wordCounts[word]++;
+                    }
+                }
+            }
+        }
+
+        if (userCount == 1) {
+            ghostCount++;
+        }
+    }
+
+    // Top 5 words
+    QList<QPair<int, QString> > sortedWords;
+    for (QHash<QString, int>::const_iterator it = wordCounts.constBegin();
+         it != wordCounts.constEnd(); ++it) {
+        sortedWords.append(qMakePair(it.value(), it.key()));
+    }
+    std::sort(sortedWords.begin(), sortedWords.end(),
+              [](const QPair<int, QString> &a, const QPair<int, QString> &b) {
+        return a.first > b.first;
+    });
+
+    QVariantList topWords;
+    for (int i = 0; i < sortedWords.count() && i < 5; ++i) {
+        QVariantMap entry;
+        entry["word"] = sortedWords.at(i).second;
+        entry["count"] = sortedWords.at(i).first;
+        topWords.append(entry);
+    }
+
+    stats["topWords"] = topWords;
+    stats["longestUserChars"] = longestUserChars;
+    stats["avgSendHour"] = hourCount > 0 ? int(hourSum / hourCount) : -1;
+    stats["avgGapSecs"] = gapCount > 0 ? int(gapSum / gapCount) : -1;
+    stats["ghostCount"] = ghostCount;
 
     return stats;
 }

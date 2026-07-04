@@ -54,6 +54,7 @@ public:
     Q_INVOKABLE bool isVisionModel(const QString &modelId) const;
     Q_INVOKABLE void updateModelCache(const QVariantList &models);
     Q_INVOKABLE bool modelCacheStale() const;
+    Q_INVOKABLE int modelSwitches() const;
     Q_INVOKABLE void clearApiKey();
     Q_INVOKABLE bool isFirstLaunch() const;
     Q_INVOKABLE void setFirstLaunchComplete();
@@ -83,6 +84,7 @@ private:
     QString m_systemPrompt;
     QStringList m_cachedModels;
     QStringList m_cachedVisionModels;
+    int m_modelSwitches;
 
     void loadSettings();
     void saveSettings();

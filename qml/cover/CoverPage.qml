@@ -5,9 +5,17 @@ CoverBackground {
     id: cover
 
     property string lastMessage: conversationModel.getLastAssistantMessage()
+    property var coverStats: conversationManager.getStatistics()
 
     function refresh() {
         lastMessage = conversationModel.getLastAssistantMessage()
+        coverStats = conversationManager.getStatistics()
+    }
+
+    function formatCount(n) {
+        if (n >= 1000000) return (n / 1000000).toFixed(1) + "M"
+        if (n >= 1000) return (n / 1000).toFixed(1) + "K"
+        return "" + n
     }
 
     Connections {
@@ -67,6 +75,39 @@ CoverBackground {
                   : qsTr("No conversation")
             visible: cover.lastMessage === ""
             font.pixelSize: Theme.fontSizeSmall
+            color: Theme.secondaryColor
+        }
+    }
+
+    // Mini stats anchored at the bottom
+    Column {
+        anchors {
+            bottom: parent.bottom
+            left: parent.left
+            right: parent.right
+            bottomMargin: Theme.itemSizeSmall
+            leftMargin: Theme.paddingLarge
+            rightMargin: Theme.paddingLarge
+        }
+        spacing: Theme.paddingSmall / 2
+
+        Separator {
+            width: parent.width
+            color: Theme.rgba(Theme.highlightColor, 0.4)
+        }
+
+        Label {
+            text: qsTr("%n conversation(s)", "", coverStats.totalConversations || 0)
+            font.pixelSize: Theme.fontSizeExtraSmall
+            color: Theme.secondaryColor
+        }
+
+        Label {
+            text: (coverStats.totalTokens || 0) > 0
+                  ? qsTr("Tokens: %1").arg(formatCount(coverStats.totalTokens))
+                  : qsTr("Tokens this month: %1").arg(formatCount(coverStats.tokensThisMonth || 0))
+            visible: (coverStats.totalTokens || 0) > 0 || (coverStats.tokensThisMonth || 0) > 0
+            font.pixelSize: Theme.fontSizeExtraSmall
             color: Theme.secondaryColor
         }
     }

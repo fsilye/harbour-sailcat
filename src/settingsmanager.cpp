@@ -7,6 +7,7 @@ SettingsManager::SettingsManager(QObject *parent)
     , m_useCustomKey(false)
     , m_temperature(-1.0)
     , m_maxTokens(0)
+    , m_modelSwitches(0)
 {
     loadSettings();
 }
@@ -39,9 +40,16 @@ void SettingsManager::setModelName(const QString &model)
 {
     if (m_modelName != model) {
         m_modelName = model;
+        m_modelSwitches++;
+        m_settings.setValue("stats/modelSwitches", m_modelSwitches);
         saveSettings();
         emit modelNameChanged();
     }
+}
+
+int SettingsManager::modelSwitches() const
+{
+    return m_modelSwitches;
 }
 
 bool SettingsManager::useCustomKey() const
@@ -243,6 +251,7 @@ void SettingsManager::loadSettings()
     m_systemPrompt = m_settings.value("generation/systemPrompt", "").toString();
     m_cachedModels = m_settings.value("models/cachedList").toStringList();
     m_cachedVisionModels = m_settings.value("models/visionList").toStringList();
+    m_modelSwitches = m_settings.value("stats/modelSwitches", 0).toInt();
 }
 
 void SettingsManager::saveSettings()
