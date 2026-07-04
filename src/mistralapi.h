@@ -41,7 +41,7 @@ signals:
     void usageReceived(int promptTokens, int completionTokens);
     void responseCompleted();
     void messageSent();
-    void titleGenerated(const QString &title);
+    void titleGenerated(const QString &title, const QString &category);
     void modelsFetched(const QVariantList &models);
     void modelsFetchFailed();
 

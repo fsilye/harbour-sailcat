@@ -119,7 +119,10 @@ void MistralAPI::generateTitle(const QString &apiKey,
     QJsonArray messages;
     QJsonObject systemMsg;
     systemMsg["role"] = "system";
-    systemMsg["content"] = "Generate a short conversation title (max 50 characters) based on the user's first message. Reply with ONLY the title, no explanation.";
+    systemMsg["content"] = "Analyze the user's first message and reply with ONLY a compact JSON object, "
+                           "no explanation, no code fences: "
+                           "{\"title\":\"short conversation title, max 50 characters, same language as the message\","
+                           "\"category\":\"one of: code, writing, translation, learning, ideas, practical, other\"}";
     messages.append(systemMsg);
 
     QJsonObject userMsg;
@@ -304,19 +307,43 @@ void MistralAPI::onTitleGenerationFinished()
             if (!choices.isEmpty()) {
                 QJsonObject choice = choices.at(0).toObject();
                 QJsonObject message = choice["message"].toObject();
-                QString title = message["content"].toString().trimmed();
+                QString content = message["content"].toString().trimmed();
 
-                // Remove quotes if present
-                if (title.startsWith("\"") && title.endsWith("\"")) {
-                    title = title.mid(1, title.length() - 2);
+                QString title;
+                QString category;
+
+                // Extract the JSON object even if wrapped in fences or prose
+                int start = content.indexOf('{');
+                int end = content.lastIndexOf('}');
+                if (start >= 0 && end > start) {
+                    QJsonDocument titleDoc = QJsonDocument::fromJson(
+                                content.mid(start, end - start + 1).toUtf8());
+                    if (titleDoc.isObject()) {
+                        title = titleDoc.object()["title"].toString().trimmed();
+                        category = titleDoc.object()["category"].toString().trimmed().toLower();
+                    }
                 }
 
-                // Truncate if too long
+                // Fallback: model ignored the JSON format, use raw content as title
+                if (title.isEmpty()) {
+                    title = content;
+                    if (title.startsWith("\"") && title.endsWith("\"")) {
+                        title = title.mid(1, title.length() - 2);
+                    }
+                }
+
+                static const QStringList allowedCategories = QStringList()
+                        << "code" << "writing" << "translation" << "learning"
+                        << "ideas" << "practical" << "other";
+                if (!allowedCategories.contains(category)) {
+                    category = "other";
+                }
+
                 if (title.length() > 50) {
                     title = title.left(47) + "...";
                 }
 
-                emit titleGenerated(title);
+                emit titleGenerated(title, category);
             }
         }
     } else {

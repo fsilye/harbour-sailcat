@@ -10,8 +10,10 @@
 struct Conversation {
     QString id;
     QString title;
+    QString category;
     qint64 createdAt;
     qint64 updatedAt;
+    qint64 totalTokens = 0;
     QList<Message> messages;
 };
 
@@ -32,6 +34,7 @@ public:
     Q_INVOKABLE void deleteConversation(const QString &conversationId);
     Q_INVOKABLE void renameConversation(const QString &conversationId, const QString &newTitle);
     Q_INVOKABLE void updateCurrentConversationTitle(const QString &newTitle);
+    Q_INVOKABLE void updateCurrentConversationCategory(const QString &category);
     Q_INVOKABLE void saveCurrentConversation();
     Q_INVOKABLE QJsonArray getConversationsList() const;
     Q_INVOKABLE QVariant getConversationDetails(const QString &conversationId) const;

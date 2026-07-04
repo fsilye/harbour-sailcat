@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Nemo.Notifications 1.0
+import "../components"
 
 Page {
     id: historyPage
@@ -10,6 +11,7 @@ Page {
     property string searchQuery: ""
     property var dayCounts: []
     property int maxDayCount: 0
+    property int maxMessages: 1
 
     SilicaListView {
         id: conversationsList
@@ -224,19 +226,19 @@ Page {
                     }
                 }
 
-                // Animated user/assistant ratio
+                // Conversation size relative to the biggest one
                 Rectangle {
                     width: parent.width
                     height: Math.max(3, Theme.paddingSmall / 3)
                     radius: height / 2
                     color: Theme.rgba(Theme.secondaryHighlightColor, 0.3)
-                    visible: (model.messageCount || 0) > 0 && model.userMessageCount !== undefined
+                    visible: (model.messageCount || 0) > 0
 
                     Rectangle {
                         height: parent.height
                         radius: parent.radius
                         color: Theme.highlightColor
-                        width: parent.width * ((model.userMessageCount || 0) / Math.max(1, model.messageCount))
+                        width: parent.width * ((model.messageCount || 0) / Math.max(1, historyPage.maxMessages))
 
                         Behavior on width {
                             NumberAnimation { duration: 450; easing.type: Easing.OutQuad }
@@ -247,8 +249,14 @@ Page {
                 Row {
                     spacing: Theme.paddingMedium
 
+                    CategoryChip {
+                        category: model.category || ""
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
                     Label {
                         text: Qt.formatDateTime(new Date(model.updatedAt), "dd/MM/yyyy hh:mm")
+                        anchors.verticalCenter: parent.verticalCenter
                         color: conversationItem.highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
                         font.pixelSize: Theme.fontSizeExtraSmall
                     }
@@ -359,6 +367,12 @@ Page {
             if (dayCounts[j] > max) max = dayCounts[j]
         }
         maxDayCount = max
+
+        var maxMsg = 1
+        for (var k = 0; k < conversations.length; k++) {
+            if (conversations[k].messageCount > maxMsg) maxMsg = conversations[k].messageCount
+        }
+        maxMessages = maxMsg
     }
 
     function performSearch() {

@@ -35,10 +35,10 @@ Page {
                 RatioDonut {
                     id: statsDonut
                     anchors.verticalCenter: parent.verticalCenter
-                    ratio: (detailPage.convStats.messageCount || 0) > 0
-                           ? detailPage.convStats.userCount / detailPage.convStats.messageCount : 0
+                    ratio: (detailPage.convStats.totalChars || 0) > 0
+                           ? detailPage.convStats.assistantChars / detailPage.convStats.totalChars : 0
                     go: detailPage.statsReady
-                    label: qsTr("sent by you")
+                    label: qsTr("written by AI")
                 }
 
                 Column {
@@ -59,9 +59,12 @@ Page {
                     }
 
                     CountUpLabel {
-                        value: detailPage.convStats.estimatedTokens || 0
+                        // Real token count when tracked, estimate for older conversations
+                        property bool exact: (detailPage.convStats.totalTokens || 0) > 0
+                        value: exact ? detailPage.convStats.totalTokens
+                                     : (detailPage.convStats.estimatedTokens || 0)
                         go: detailPage.statsReady
-                        prefix: "~"
+                        prefix: exact ? "" : "~"
                         suffix: " " + qsTr("tokens")
                         font.pixelSize: Theme.fontSizeSmall
                         color: Theme.primaryColor
@@ -71,6 +74,10 @@ Page {
                         text: formatDuration(detailPage.convStats.durationMs || 0)
                         font.pixelSize: Theme.fontSizeExtraSmall
                         color: Theme.secondaryColor
+                    }
+
+                    CategoryChip {
+                        category: detailPage.convStats.category || ""
                     }
                 }
             }

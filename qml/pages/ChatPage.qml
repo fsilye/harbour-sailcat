@@ -494,6 +494,7 @@ Page {
 
         onTitleGenerated: {
             conversationManager.updateCurrentConversationTitle(title)
+            conversationManager.updateCurrentConversationCategory(category)
         }
     }
 

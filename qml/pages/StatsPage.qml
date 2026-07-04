@@ -10,9 +10,47 @@ Page {
     property var messagesPerHour: stats.messagesPerHour || []
     property int maxPerDay: maxOf(messagesPerDay)
     property int maxPerHour: maxOf(messagesPerHour)
-    property real userRatio: (stats.totalMessages || 0) > 0
-                             ? stats.totalUserMessages / stats.totalMessages : 0
+    property real writeRatio: ((stats.totalUserChars || 0) + (stats.totalAssistantChars || 0)) > 0
+                              ? stats.totalUserChars / (stats.totalUserChars + stats.totalAssistantChars) : 0
+    property var tokensPerDay: stats.tokensPerDay || []
+    property int maxTokensDay: maxOf(tokensPerDay)
+    property var categoryList: buildCategoryList()
+    property int maxCategoryCount: categoryList.length > 0 ? categoryList[0].count : 1
     property real chartProgress: 0
+
+    function buildCategoryList() {
+        var counts = stats.categoryCounts || {}
+        var list = []
+        for (var key in counts) {
+            list.push({ cat: key, count: counts[key] })
+        }
+        list.sort(function(a, b) { return b.count - a.count })
+        return list
+    }
+
+    function categoryColor(cat) {
+        switch (cat) {
+        case "code": return "#4fc3f7"
+        case "writing": return "#ba68c8"
+        case "translation": return "#4db6ac"
+        case "learning": return "#ffb74d"
+        case "ideas": return "#f06292"
+        case "practical": return "#aed581"
+        default: return "#90a4ae"
+        }
+    }
+
+    function categoryLabel(cat) {
+        switch (cat) {
+        case "code": return qsTr("Code")
+        case "writing": return qsTr("Writing")
+        case "translation": return qsTr("Translation")
+        case "learning": return qsTr("Learning")
+        case "ideas": return qsTr("Ideas")
+        case "practical": return qsTr("Practical")
+        default: return qsTr("Other")
+        }
+    }
 
     NumberAnimation on chartProgress {
         from: 0
@@ -101,17 +139,17 @@ Page {
                 }
             }
 
-            // Sent vs received ratio
+            // Who writes more (characters, not the meaningless 1:1 message ratio)
             SectionHeader {
-                text: qsTr("Sent vs received")
-                visible: (stats.totalMessages || 0) > 0
+                text: qsTr("Who writes more?")
+                visible: statsPage.writeRatio > 0
             }
 
             Column {
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2 * Theme.horizontalPageMargin
                 spacing: Theme.paddingSmall
-                visible: (stats.totalMessages || 0) > 0
+                visible: statsPage.writeRatio > 0
 
                 Rectangle {
                     width: parent.width
@@ -120,7 +158,7 @@ Page {
                     color: Theme.rgba(Theme.secondaryHighlightColor, 0.4)
 
                     Rectangle {
-                        width: Math.max(parent.height, parent.width * statsPage.userRatio * statsPage.chartProgress)
+                        width: Math.max(parent.height, parent.width * statsPage.writeRatio * statsPage.chartProgress)
                         height: parent.height
                         radius: parent.radius
                         color: Theme.highlightColor
@@ -134,16 +172,70 @@ Page {
                     Label {
                         id: sentLabel
                         anchors.left: parent.left
-                        text: qsTr("Sent: %1").arg(stats.totalUserMessages || 0)
+                        text: qsTr("You: %1 chars").arg(formatExactTokens(stats.totalUserChars || 0))
                         color: Theme.highlightColor
                         font.pixelSize: Theme.fontSizeExtraSmall
                     }
 
                     Label {
                         anchors.right: parent.right
-                        text: qsTr("Received: %1").arg(stats.totalAssistantMessages || 0)
+                        text: qsTr("AI: %1 chars").arg(formatExactTokens(stats.totalAssistantChars || 0))
                         color: Theme.secondaryHighlightColor
                         font.pixelSize: Theme.fontSizeExtraSmall
+                    }
+                }
+            }
+
+            // Question categories
+            SectionHeader {
+                text: qsTr("Question categories")
+                visible: statsPage.categoryList.length > 0
+            }
+
+            Column {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                spacing: Theme.paddingSmall
+                visible: statsPage.categoryList.length > 0
+
+                Repeater {
+                    model: statsPage.categoryList
+
+                    Item {
+                        width: parent.width
+                        height: Theme.fontSizeSmall + Theme.paddingMedium
+
+                        Label {
+                            id: catNameLabel
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width * 0.3
+                            text: categoryLabel(modelData.cat)
+                            font.pixelSize: Theme.fontSizeExtraSmall
+                            color: Theme.primaryColor
+                            truncationMode: TruncationMode.Fade
+                        }
+
+                        Rectangle {
+                            anchors {
+                                left: catNameLabel.right
+                                leftMargin: Theme.paddingMedium
+                                verticalCenter: parent.verticalCenter
+                            }
+                            height: Theme.paddingMedium
+                            radius: height / 2
+                            color: categoryColor(modelData.cat)
+                            width: (parent.width * 0.5) * statsPage.chartProgress
+                                   * modelData.count / Math.max(1, statsPage.maxCategoryCount)
+                        }
+
+                        Label {
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: modelData.count
+                            font.pixelSize: Theme.fontSizeExtraSmall
+                            color: Theme.secondaryColor
+                        }
                     }
                 }
             }
@@ -204,6 +296,75 @@ Page {
                         text: statsPage.maxPerDay > 0
                               ? qsTr("Peak: %1 messages/day").arg(statsPage.maxPerDay)
                               : qsTr("No recent activity")
+                        color: Theme.secondaryColor
+                        font.pixelSize: Theme.fontSizeExtraSmall
+                    }
+
+                    Label {
+                        anchors.right: parent.right
+                        text: qsTr("Today")
+                        color: Theme.secondaryColor
+                        font.pixelSize: Theme.fontSizeExtraSmall
+                    }
+                }
+            }
+
+            // Token usage chart
+            SectionHeader {
+                text: qsTr("Tokens - last 14 days")
+                visible: statsPage.maxTokensDay > 0
+            }
+
+            Column {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                spacing: Theme.paddingSmall
+                visible: statsPage.maxTokensDay > 0
+
+                Row {
+                    id: tokenBarsRow
+                    width: parent.width
+                    height: Theme.itemSizeLarge
+                    spacing: Theme.paddingSmall / 2
+
+                    Repeater {
+                        model: statsPage.tokensPerDay
+
+                        Item {
+                            width: (tokenBarsRow.width - tokenBarsRow.spacing * 13) / 14
+                            height: tokenBarsRow.height
+
+                            Rectangle {
+                                anchors.bottom: parent.bottom
+                                width: parent.width
+                                radius: 2
+                                height: statsPage.maxTokensDay > 0 && modelData > 0
+                                        ? Math.max(6, parent.height * statsPage.chartProgress * modelData / statsPage.maxTokensDay)
+                                        : 6
+                                color: modelData > 0
+                                       ? Theme.rgba(Theme.highlightColor,
+                                                    0.4 + 0.6 * modelData / statsPage.maxTokensDay)
+                                       : Theme.rgba(Theme.secondaryColor, 0.2)
+                            }
+                        }
+                    }
+                }
+
+                Item {
+                    width: parent.width
+                    height: tokenPeakLabel.height
+
+                    Label {
+                        anchors.left: parent.left
+                        text: Qt.formatDate(new Date(Date.now() - 13 * 86400000), "dd/MM")
+                        color: Theme.secondaryColor
+                        font.pixelSize: Theme.fontSizeExtraSmall
+                    }
+
+                    Label {
+                        id: tokenPeakLabel
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("Peak: %1 tokens/day").arg(formatExactTokens(statsPage.maxTokensDay))
                         color: Theme.secondaryColor
                         font.pixelSize: Theme.fontSizeExtraSmall
                     }
@@ -311,6 +472,12 @@ Page {
                     value: stats.firstMessageDate > 0
                            ? Qt.formatDateTime(new Date(stats.firstMessageDate), "dd/MM/yyyy")
                            : qsTr("Never")
+                }
+
+                DetailItem {
+                    label: qsTr("Tokens this month")
+                    value: formatExactTokens(stats.tokensThisMonth || 0)
+                    visible: (stats.tokensThisMonth || 0) > 0
                 }
 
                 DetailItem {

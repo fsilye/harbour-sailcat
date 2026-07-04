@@ -135,6 +135,7 @@ QJsonArray ConversationManager::getConversationsList() const
         obj["createdAt"] = conv.createdAt;
         obj["updatedAt"] = conv.updatedAt;
         obj["messageCount"] = conv.messages.count();
+        obj["category"] = conv.category;
 
         int userCount = 0;
         for (const Message &msg : conv.messages) {
@@ -198,8 +199,10 @@ void ConversationManager::loadAllConversations()
         Conversation conv;
         conv.id = obj["id"].toString();
         conv.title = obj["title"].toString();
+        conv.category = obj["category"].toString();
         conv.createdAt = obj["createdAt"].toVariant().toLongLong();
         conv.updatedAt = obj["updatedAt"].toVariant().toLongLong();
+        conv.totalTokens = obj["totalTokens"].toVariant().toLongLong();
 
         QJsonArray messagesArray = obj["messages"].toArray();
         for (int j = 0; j < messagesArray.count(); ++j) {
@@ -224,8 +227,10 @@ void ConversationManager::saveAllConversations()
         QJsonObject obj;
         obj["id"] = conv.id;
         obj["title"] = conv.title;
+        obj["category"] = conv.category;
         obj["createdAt"] = conv.createdAt;
         obj["updatedAt"] = conv.updatedAt;
+        obj["totalTokens"] = conv.totalTokens;
 
         QJsonArray messagesArray;
         for (const Message &msg : conv.messages) {
@@ -337,6 +342,19 @@ void ConversationManager::purgeAllConversations()
     emit conversationCountChanged();
 }
 
+void ConversationManager::updateCurrentConversationCategory(const QString &category)
+{
+    if (m_currentConversationId.isEmpty() || category.isEmpty()) {
+        return;
+    }
+
+    Conversation *conv = findConversation(m_currentConversationId);
+    if (conv) {
+        conv->category = category;
+        saveAllConversations();
+    }
+}
+
 QString ConversationManager::currentConversationId() const
 {
     return m_currentConversationId;
@@ -439,12 +457,36 @@ void ConversationManager::addTokenUsage(int promptTokens, int completionTokens)
     if (promptTokens <= 0 && completionTokens <= 0) {
         return;
     }
+    int total = promptTokens + completionTokens;
+
     m_totalPromptTokens += promptTokens;
     m_totalCompletionTokens += completionTokens;
     // Persist immediately so counters survive a crash
     m_settings.setValue("stats/totalPromptTokens", m_totalPromptTokens);
     m_settings.setValue("stats/totalCompletionTokens", m_totalCompletionTokens);
+
+    // Daily series for the usage charts, pruned to ~2 months
+    QJsonObject daily = QJsonDocument::fromJson(
+                m_settings.value("stats/dailyTokens").toByteArray()).object();
+    QString today = QDate::currentDate().toString("yyyy-MM-dd");
+    daily[today] = daily[today].toInt() + total;
+
+    QDate pruneLimit = QDate::currentDate().addDays(-62);
+    for (const QString &key : daily.keys()) {
+        if (QDate::fromString(key, "yyyy-MM-dd") < pruneLimit) {
+            daily.remove(key);
+        }
+    }
+    m_settings.setValue("stats/dailyTokens",
+                        QJsonDocument(daily).toJson(QJsonDocument::Compact));
     m_settings.sync();
+
+    // Per-conversation counter
+    Conversation *conv = findConversation(m_currentConversationId);
+    if (conv) {
+        conv->totalTokens += total;
+        saveAllConversations();
+    }
 }
 
 QVariantMap ConversationManager::getConversationStatistics(const QString &conversationId) const
@@ -459,6 +501,8 @@ QVariantMap ConversationManager::getConversationStatistics(const QString &conver
         int userCount = 0;
         int assistantCount = 0;
         qint64 totalChars = 0;
+        qint64 userChars = 0;
+        qint64 assistantChars = 0;
         int longestChars = 0;
         QVariantList rhythm;
 
@@ -469,8 +513,10 @@ QVariantMap ConversationManager::getConversationStatistics(const QString &conver
             const Message &msg = conv.messages.at(i);
             if (msg.role == "user") {
                 userCount++;
+                userChars += msg.content.length();
             } else {
                 assistantCount++;
+                assistantChars += msg.content.length();
             }
             totalChars += msg.content.length();
             longestChars = qMax(longestChars, msg.content.length());
@@ -488,9 +534,13 @@ QVariantMap ConversationManager::getConversationStatistics(const QString &conver
         stats["userCount"] = userCount;
         stats["assistantCount"] = assistantCount;
         stats["totalChars"] = totalChars;
+        stats["userChars"] = userChars;
+        stats["assistantChars"] = assistantChars;
         stats["avgChars"] = count > 0 ? int(totalChars / count) : 0;
         stats["longestChars"] = longestChars;
         stats["estimatedTokens"] = totalChars / 4;
+        stats["category"] = conv.category;
+        stats["totalTokens"] = conv.totalTokens;
 
         qint64 durationMs = 0;
         if (count > 1) {
@@ -515,7 +565,10 @@ QVariantMap ConversationManager::getStatistics() const
     int longestMessageLength = 0;
     qint64 estimatedTokens = 0;
     qint64 firstMessageDate = 0;
+    qint64 totalUserChars = 0;
+    qint64 totalAssistantChars = 0;
     QString longestConvTitle;
+    QVariantMap categoryCounts;
 
     // Activity distribution: last 14 days (oldest first) and hour of day
     QDate today = QDate::currentDate();
@@ -526,6 +579,11 @@ QVariantMap ConversationManager::getStatistics() const
         int convMessageCount = conv.messages.count();
         totalMessages += convMessageCount;
 
+        if (convMessageCount > 0) {
+            QString cat = conv.category.isEmpty() ? "other" : conv.category;
+            categoryCounts[cat] = categoryCounts[cat].toInt() + 1;
+        }
+
         if (convMessageCount > longestConvMessages) {
             longestConvMessages = convMessageCount;
             longestConvTitle = conv.title.isEmpty() ? tr("Untitled") : conv.title;
@@ -534,8 +592,10 @@ QVariantMap ConversationManager::getStatistics() const
         for (const Message &msg : conv.messages) {
             if (msg.role == "user") {
                 totalUserMessages++;
+                totalUserChars += msg.content.length();
             } else if (msg.role == "assistant") {
                 totalAssistantMessages++;
+                totalAssistantChars += msg.content.length();
             }
 
             // Find longest message
@@ -584,6 +644,27 @@ QVariantMap ConversationManager::getStatistics() const
     stats["totalPromptTokens"] = m_totalPromptTokens;
     stats["totalCompletionTokens"] = m_totalCompletionTokens;
     stats["totalTokens"] = m_totalPromptTokens + m_totalCompletionTokens;
+    stats["totalUserChars"] = totalUserChars;
+    stats["totalAssistantChars"] = totalAssistantChars;
+    stats["categoryCounts"] = categoryCounts;
+
+    // Token usage over time
+    QJsonObject daily = QJsonDocument::fromJson(
+                m_settings.value("stats/dailyTokens").toByteArray()).object();
+    QVariantList tokensPerDay;
+    qint64 tokensThisMonth = 0;
+    for (int i = 13; i >= 0; --i) {
+        QDate d = today.addDays(-i);
+        tokensPerDay.append(daily[d.toString("yyyy-MM-dd")].toInt());
+    }
+    for (const QString &key : daily.keys()) {
+        QDate d = QDate::fromString(key, "yyyy-MM-dd");
+        if (d.year() == today.year() && d.month() == today.month()) {
+            tokensThisMonth += daily[key].toInt();
+        }
+    }
+    stats["tokensPerDay"] = tokensPerDay;
+    stats["tokensThisMonth"] = tokensThisMonth;
     stats["firstMessageDate"] = firstMessageDate;
     stats["messagesPerDay"] = messagesPerDay;
     stats["messagesPerHour"] = messagesPerHour;
@@ -641,6 +722,7 @@ QVariantList ConversationManager::searchConversations(const QString &query) cons
             result["updatedAt"] = conv.updatedAt;
             result["messageCount"] = conv.messages.count();
             result["userMessageCount"] = userCount;
+            result["category"] = conv.category;
             result["matchCount"] = matchCount;
             result["matchPreview"] = matchPreview.isEmpty() ? tr("Match in title") : matchPreview;
             result["titleMatch"] = titleMatch;

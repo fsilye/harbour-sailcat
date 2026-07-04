@@ -35,6 +35,7 @@ DISTFILES += qml/harbour-sailcat.qml \
     qml/components/TypingIndicator.qml \
     qml/components/CountUpLabel.qml \
     qml/components/RatioDonut.qml \
+    qml/components/CategoryChip.qml \
     rpm/harbour-sailcat.spec \
     harbour-sailcat.desktop
 
