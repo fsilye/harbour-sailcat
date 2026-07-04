@@ -6,15 +6,22 @@
 
 **SailCat** is an elegant client for **Mistral AI Chat**, specifically designed for **Sailfish OS**. Enjoy intelligent conversations with Mistral's most advanced AI models, directly from your Sailfish device.
 
+> 🤖 **Since version 2.x, SailCat is developed with the help of AI** — Claude (Claude Code) and Mistral Vibe. Features are specified in [docs/features/](docs/features/), implemented together by a human developer and AI agents, validated by CI on three architectures and covered by unit tests before every release. A human still codes, reviews, tests on device and hits the tag button :)
+
 ## ✨ Features
 
 - 🆓 **Mistral AI free tier support** - Start for free
 - 🔑 **Personal API key** - Use your own key for unlimited access
 - ⚡ **Real-time streaming** - Instant and smooth responses
-- 🎨 **Native Sailfish interface** - Perfect integration with Silica
-- 💬 **Conversation history** - Keep context of your exchanges
-- 🧠 **Model selection** - Mistral Small, Large, or Pixtral (vision)
-- 🌐 **Respects Sailfish UI/UX** - Pulley menu, cover actions, and more
+- 🖼️ **Image support (vision)** - Attach a photo and let Pixtral analyze it
+- 🧠 **Live model list** - All current Mistral chat models, fetched from the API, with a quick-switch button next to the input
+- 🎭 **System prompt & personas** - Presets (Concise, Translator, Code assistant) or your own instruction
+- 🎛️ **Generation settings** - Temperature and response length
+- 💬 **Conversation history** - Search, per-conversation details, automatic titles and categories
+- 📌 **Message actions** - Pin, edit & resend, regenerate, copy code blocks
+- 📤 **Markdown export** - To Documents or clipboard
+- 📊 **Statistics & badges** - Activity charts, real token tracking (per day/month/conversation), question categories, fun badges and top AI words
+- 🎨 **Native Sailfish interface** - Swipe to history, bottom pulley menu, animations, live cover with the latest answer
 - 🌍 **Multilingual** - English, French, German, Spanish, Finnish, Italian
 
 ## 🚀 Installation
@@ -76,9 +83,7 @@ Use the pulley menu and select **"New conversation"** to clear history and start
 
 ### Available models
 
-- **Mistral Small** (Recommended) - Balanced between performance and speed
-- **Mistral Large** - Most powerful for complex tasks
-- **Pixtral 12B** - Image support and vision
+The model list is fetched live from the Mistral API (all current `-latest` chat models, including vision-capable ones) and cached for offline use. Switch models anytime with the button next to the text input.
 
 ## 🏗️ Technical Architecture
 
@@ -136,12 +141,13 @@ POST https://api.mistral.ai/v1/chat/completions
 
 ## 🔒 Security & Privacy
 
-- ✅ API keys are stored locally with QSettings
+- ✅ API keys are stored locally with QSettings, isolated by Sailjail sandboxing
 - ✅ No telemetry or analytics
 - ✅ Direct communication with Mistral API (HTTPS)
 - ✅ No intermediate server
 - ✅ Conversations stored locally on your device
 - ✅ No sync with Mistral's web interface
+- ✅ Sailjail permissions: Internet, Pictures (attachments), Documents (exports)
 - ⚠️ Your API key gives access to your Mistral account - keep it secret
 
 ## 🚀 Releases & CI/CD
@@ -167,7 +173,15 @@ Compiled RPMs are available in [Releases](https://github.com/nicosouv/harbour-sa
 
 ### PR Validation
 
-Pull Requests are automatically validated with the **pr-build.yml** workflow that builds for armv7hl.
+Pull Requests are automatically validated with the **pr-build.yml** workflow that builds for armv7hl and runs the unit test suite.
+
+### Tests
+
+Backend classes are covered by a QtTest suite (`tests/`) that runs in CI on every build and blocks releases on failure:
+
+```bash
+cd tests && qmake tests.pro && make && ./tst_sailcat
+```
 
 ### For maintainers
 
@@ -185,12 +199,15 @@ Contributions are welcome! Here's how to participate:
 
 ## 📝 TODO / Roadmap
 
-- [ ] Image support with Pixtral (upload from gallery)
+The detailed feature roadmap with per-feature specs lives in [docs/ROADMAP.md](docs/ROADMAP.md).
+
+- [x] Image support with Pixtral (upload from gallery)
 - [x] Persistent conversation saving
-- [ ] Conversation export (text, markdown)
+- [x] Conversation export (text, markdown)
 - [x] Multiple simultaneous conversations
-- [ ] Advanced settings (temperature, max_tokens)
+- [x] Advanced settings (temperature, max_tokens, system prompt)
 - [x] Translations (English, French, German, Spanish, Finnish, Italian)
+- [x] Statistics, token tracking, badges
 - [ ] Custom color themes
 - [ ] Mistral agents support
 
