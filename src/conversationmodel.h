@@ -9,6 +9,7 @@
 struct Message {
     QString role;      // "user" or "assistant"
     QString content;
+    QString imagePath; // local file attached to the message (vision models)
     qint64 timestamp;
     bool pinned = false;
 };
@@ -23,7 +24,8 @@ public:
         RoleRole = Qt::UserRole + 1,
         ContentRole,
         TimestampRole,
-        PinnedRole
+        PinnedRole,
+        ImagePathRole
     };
 
     explicit ConversationModel(QObject *parent = nullptr);
@@ -32,7 +34,7 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QHash<int, QByteArray> roleNames() const override;
 
-    Q_INVOKABLE void addUserMessage(const QString &content);
+    Q_INVOKABLE void addUserMessage(const QString &content, const QString &imagePath = QString());
     Q_INVOKABLE void addAssistantMessage(const QString &content);
     Q_INVOKABLE void updateLastAssistantMessage(const QString &content);
     Q_INVOKABLE void removeLastMessageIfEmpty();
@@ -44,7 +46,8 @@ public:
     Q_INVOKABLE QString getFirstUserMessage() const;
     Q_INVOKABLE QString getLastAssistantMessage() const;
 
-    void addMessage(const QString &role, const QString &content, qint64 timestamp, bool pinned = false);
+    void addMessage(const QString &role, const QString &content, qint64 timestamp,
+                    bool pinned = false, const QString &imagePath = QString());
     QJsonArray toJsonArray() const;
 
 signals:

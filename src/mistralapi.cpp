@@ -60,7 +60,14 @@ void MistralAPI::sendMessage(const QString &apiKey,
         QVariantMap msgMap = msgVariant.toMap();
         QJsonObject msgObj;
         msgObj["role"] = msgMap["role"].toString();
-        msgObj["content"] = msgMap["content"].toString();
+
+        // Vision messages use an array of {type, ...} parts instead of a string
+        QVariant contentVar = msgMap["content"];
+        if (contentVar.type() == QVariant::List) {
+            msgObj["content"] = QJsonArray::fromVariantList(contentVar.toList());
+        } else {
+            msgObj["content"] = contentVar.toString();
+        }
         messages.append(msgObj);
     }
 

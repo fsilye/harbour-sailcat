@@ -188,6 +188,7 @@ Page {
             width: messagesList.width
             role: model.role
             content: model.content
+            imagePath: model.imagePath || ""
         }
 
         PullDownMenu {

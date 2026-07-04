@@ -28,6 +28,8 @@ QVariant ConversationModel::data(const QModelIndex &index, int role) const
         return message.timestamp;
     case PinnedRole:
         return message.pinned;
+    case ImagePathRole:
+        return message.imagePath;
     default:
         return QVariant();
     }
@@ -40,16 +42,19 @@ QHash<int, QByteArray> ConversationModel::roleNames() const
     roles[ContentRole] = "content";
     roles[TimestampRole] = "timestamp";
     roles[PinnedRole] = "pinned";
+    roles[ImagePathRole] = "imagePath";
     return roles;
 }
 
-void ConversationModel::addMessage(const QString &role, const QString &content, qint64 timestamp, bool pinned)
+void ConversationModel::addMessage(const QString &role, const QString &content, qint64 timestamp,
+                                   bool pinned, const QString &imagePath)
 {
     Message msg;
     msg.role = role;
     msg.content = content;
     msg.timestamp = timestamp;
     msg.pinned = pinned;
+    msg.imagePath = imagePath;
 
     beginInsertRows(QModelIndex(), m_messages.count(), m_messages.count());
     m_messages.append(msg);
@@ -58,9 +63,9 @@ void ConversationModel::addMessage(const QString &role, const QString &content, 
     emit countChanged();
 }
 
-void ConversationModel::addUserMessage(const QString &content)
+void ConversationModel::addUserMessage(const QString &content, const QString &imagePath)
 {
-    addMessage("user", content, QDateTime::currentMSecsSinceEpoch());
+    addMessage("user", content, QDateTime::currentMSecsSinceEpoch(), false, imagePath);
 }
 
 void ConversationModel::addAssistantMessage(const QString &content)
@@ -197,6 +202,7 @@ QJsonArray ConversationModel::toJsonArray() const
         msgObj["content"] = msg.content;
         msgObj["timestamp"] = msg.timestamp;
         msgObj["pinned"] = msg.pinned;
+        msgObj["imagePath"] = msg.imagePath;
         messages.append(msgObj);
     }
 

@@ -26,7 +26,7 @@ Status legend: `todo` / `in progress` / `done`
 
 | # | Feature | Spec | Status |
 |---|---------|------|--------|
-| 09 | Image support for Pixtral | [09-pixtral-vision.md](features/09-pixtral-vision.md) | todo |
+| 09 | Image support for Pixtral | [09-pixtral-vision.md](features/09-pixtral-vision.md) | done (v2.0.0) |
 
 ## Phase 4 — Design & polish
 

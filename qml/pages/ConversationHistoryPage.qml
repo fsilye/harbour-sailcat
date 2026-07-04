@@ -150,7 +150,8 @@ Page {
 
             onClicked: {
                 conversationManager.loadConversation(model.id)
-                pageStack.pop()
+                // navigateBack works both when this page is attached (swipe) and when pushed
+                pageStack.navigateBack()
             }
 
             menu: ContextMenu {
@@ -318,7 +319,7 @@ Page {
                 text: qsTr("New conversation")
                 onClicked: {
                     conversationManager.createNewConversation()
-                    pageStack.pop()
+                    pageStack.navigateBack()
                 }
             }
         }

@@ -8,6 +8,9 @@
 #include <QTextStream>
 #include <QStandardPaths>
 #include <QRegExp>
+#include <QImage>
+#include <QBuffer>
+#include <QUrl>
 
 ConversationManager::ConversationManager(QObject *parent)
     : QObject(parent)
@@ -79,7 +82,7 @@ void ConversationManager::loadConversation(const QString &conversationId)
 
     // Load messages preserving their original timestamps
     for (const Message &msg : conv->messages) {
-        m_currentConversation->addMessage(msg.role, msg.content, msg.timestamp, msg.pinned);
+        m_currentConversation->addMessage(msg.role, msg.content, msg.timestamp, msg.pinned, msg.imagePath);
     }
 
     m_settings.setValue("lastConversationId", m_currentConversationId);
@@ -171,6 +174,7 @@ void ConversationManager::saveCurrentConversation()
         msg.content = msgObj["content"].toString();
         msg.timestamp = msgObj["timestamp"].toVariant().toLongLong();
         msg.pinned = msgObj["pinned"].toBool();
+        msg.imagePath = msgObj["imagePath"].toString();
         conv->messages.append(msg);
     }
 
@@ -212,6 +216,7 @@ void ConversationManager::loadAllConversations()
             msg.content = msgObj["content"].toString();
             msg.timestamp = msgObj["timestamp"].toVariant().toLongLong();
             msg.pinned = msgObj["pinned"].toBool();
+            msg.imagePath = msgObj["imagePath"].toString();
             conv.messages.append(msg);
         }
 
@@ -239,6 +244,7 @@ void ConversationManager::saveAllConversations()
             msgObj["content"] = msg.content;
             msgObj["timestamp"] = msg.timestamp;
             msgObj["pinned"] = msg.pinned;
+            msgObj["imagePath"] = msg.imagePath;
             messagesArray.append(msgObj);
         }
         obj["messages"] = messagesArray;
@@ -299,6 +305,7 @@ QVariant ConversationManager::getConversationDetails(const QString &conversation
                 msgMap["role"] = msg.role;
                 msgMap["content"] = msg.content;
                 msgMap["timestamp"] = msg.timestamp;
+                msgMap["imagePath"] = msg.imagePath;
                 messagesList.append(msgMap);
             }
             details["messages"] = messagesList;
@@ -450,6 +457,37 @@ QString ConversationManager::exportConversation(const QString &conversationId) c
     file.close();
 
     return path;
+}
+
+QString ConversationManager::imageToDataUrl(const QString &filePath) const
+{
+    QString localPath = filePath;
+    if (localPath.startsWith("file:")) {
+        localPath = QUrl(localPath).toLocalFile();
+    }
+
+    QImage img(localPath);
+    if (img.isNull()) {
+        qWarning() << "Cannot load image:" << localPath;
+        return QString();
+    }
+
+    // Downscale before encoding: keeps the request body small and the API happy
+    if (img.width() > 1024 || img.height() > 1024) {
+        img = img.scaled(1024, 1024, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    }
+
+    QByteArray bytes;
+    QBuffer buffer(&bytes);
+    buffer.open(QIODevice::WriteOnly);
+    img.save(&buffer, "JPEG", 85);
+    buffer.close();
+
+    if (bytes.isEmpty()) {
+        return QString();
+    }
+
+    return QString("data:image/jpeg;base64,") + QString::fromLatin1(bytes.toBase64());
 }
 
 void ConversationManager::addTokenUsage(int promptTokens, int completionTokens)

@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.Pickers 1.0
 import Nemo.Notifications 1.0
 import "../components"
 
@@ -15,6 +16,7 @@ Page {
     property int lastCompletionTokens: 0
     property int conversationTokens: 0
     property int pendingScrollIndex: -1
+    property string attachedImagePath: ""
 
     onStatusChanged: {
         if (status === PageStatus.Active) {
@@ -149,6 +151,7 @@ Page {
             isLast: index === messageListView.count - 1
             pinned: model.pinned
             timestamp: model.timestamp
+            imagePath: model.imagePath
 
             onRegenerateRequested: chatPage.regenerateLastResponse()
             onEditRequested: chatPage.editMessage(index, model.content)
@@ -170,6 +173,41 @@ Page {
             bottom: parent.bottom
         }
         spacing: 0
+
+        // Attached image preview
+        Item {
+            width: parent.width
+            height: chatPage.attachedImagePath !== "" ? Theme.itemSizeMedium + Theme.paddingMedium : 0
+            visible: height > 0
+            clip: true
+
+            Behavior on height { NumberAnimation { duration: 200 } }
+
+            Image {
+                id: attachPreview
+                source: chatPage.attachedImagePath
+                height: Theme.itemSizeMedium
+                width: Theme.itemSizeMedium * 1.5
+                anchors {
+                    left: parent.left
+                    leftMargin: Theme.horizontalPageMargin
+                    verticalCenter: parent.verticalCenter
+                }
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                sourceSize.width: 256
+            }
+
+            IconButton {
+                anchors {
+                    left: attachPreview.right
+                    leftMargin: Theme.paddingMedium
+                    verticalCenter: parent.verticalCenter
+                }
+                icon.source: "image://theme/icon-m-clear"
+                onClicked: chatPage.attachedImagePath = ""
+            }
+        }
 
         // Token usage banner
         Item {
@@ -292,9 +330,26 @@ Page {
                     onClicked: pageStack.push(modelSelector)
                 }
 
+                // Image attachment (vision models only)
+                IconButton {
+                    id: attachButton
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: settingsManager.isVisionModel(settingsManager.modelName)
+                    icon.source: "image://theme/icon-m-attach"
+                    icon.highlighted: chatPage.attachedImagePath !== ""
+                    onClicked: {
+                        if (chatPage.attachedImagePath !== "") {
+                            chatPage.attachedImagePath = ""
+                        } else {
+                            pageStack.push(imagePickerComponent)
+                        }
+                    }
+                }
+
                 TextArea {
                     id: messageInput
                     width: parent.width - modelButton.width - sendButton.width - parent.spacing * 2
+                           - (attachButton.visible ? attachButton.width + parent.spacing : 0)
                     height: Math.min(implicitHeight, Theme.itemSizeSmall * 2.5)
                     placeholderText: qsTr("Type a message...")
                     labelVisible: false
@@ -449,6 +504,16 @@ Page {
         appName: "SailCat"
     }
 
+    Component {
+        id: imagePickerComponent
+
+        ImagePickerPage {
+            onSelectedContentPropertiesChanged: {
+                chatPage.attachedImagePath = selectedContentProperties.filePath
+            }
+        }
+    }
+
     // Connections to API
     Connections {
         target: mistralApi
@@ -541,13 +606,30 @@ Page {
             return
         }
 
+        var imagePath = attachedImagePath
+        attachedImagePath = ""
+
         messageInput.text = ""
         messageInput.focus = false
         autoScroll = true
-        conversationModel.addUserMessage(message)
+        conversationModel.addUserMessage(message, imagePath)
 
         var apiKey = settingsManager.apiKey
         var messages = conversationModel.getMessagesForApi()
+
+        // Attach the image to the last message as multimodal content
+        if (imagePath !== "") {
+            var dataUrl = conversationManager.imageToDataUrl(imagePath)
+            if (dataUrl !== "") {
+                messages[messages.length - 1] = {
+                    "role": "user",
+                    "content": [
+                        { "type": "text", "text": message },
+                        { "type": "image_url", "image_url": dataUrl }
+                    ]
+                }
+            }
+        }
 
         if (settingsManager.systemPrompt !== "") {
             messages = [{ "role": "system", "content": settingsManager.systemPrompt }].concat(messages)

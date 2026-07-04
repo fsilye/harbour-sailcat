@@ -49,6 +49,7 @@ public:
     Q_INVOKABLE QVariantList getPinnedMessages() const;
     Q_INVOKABLE QString conversationToMarkdown(const QString &conversationId) const;
     Q_INVOKABLE QString exportConversation(const QString &conversationId) const;
+    Q_INVOKABLE QString imageToDataUrl(const QString &filePath) const;
 
     void loadAllConversations();
 

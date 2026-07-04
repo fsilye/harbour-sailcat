@@ -12,6 +12,7 @@ ListItem {
     property bool isLast: false
     property bool pinned: false
     property double timestamp: 0
+    property string imagePath: ""
 
     signal regenerateRequested()
     signal editRequested()
@@ -85,6 +86,17 @@ ListItem {
             rightMargin: role === "assistant" ? Theme.horizontalPageMargin * 2 : Theme.horizontalPageMargin
         }
         spacing: Theme.paddingSmall / 2
+
+        Image {
+            id: attachedImage
+            visible: messageItem.imagePath !== "" && status !== Image.Error
+            source: messageItem.imagePath
+            width: Math.min(parent.width * 0.6, 512)
+            sourceSize.width: 512
+            fillMode: Image.PreserveAspectFit
+            asynchronous: true
+            x: messageItem.role === "user" ? parent.width - width : 0
+        }
 
         Label {
             id: messageLabel

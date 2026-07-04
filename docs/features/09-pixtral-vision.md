@@ -1,6 +1,6 @@
 # 09 — Image Support for Vision Models (Pixtral)
 
-**Status:** todo
+**Status:** done (v2.0.0)
 **Depends on:** 04 (uses `settingsManager.isVisionModel()`; without 04, hardcode `modelName.indexOf("pixtral") !== -1`)
 **Touches:** `src/conversationmodel.{h,cpp}`, `src/conversationmanager.cpp`, `src/mistralapi.cpp`, `qml/pages/ChatPage.qml`, `qml/components/MessageBubble.qml`, `harbour-sailcat.pro`
 
