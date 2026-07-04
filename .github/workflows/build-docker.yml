@@ -55,8 +55,31 @@ jobs:
           name: rpm-${{ matrix.arch }}
           path: RPMS/*.rpm
 
+  unit-tests:
+    name: "Unit tests"
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends qtbase5-dev qtbase5-dev-tools qt5-qmake make g++
+
+      - name: Build tests
+        run: |
+          export PATH=/usr/lib/qt5/bin:$PATH
+          cd tests
+          qmake tests.pro
+          make -j2
+
+      - name: Run tests
+        run: cd tests && ./tst_sailcat
+
   create-release:
-    needs: build
+    needs: [build, unit-tests]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:

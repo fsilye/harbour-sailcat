@@ -54,6 +54,8 @@ private slots:
     void onTimeout();
 
 private:
+    friend class TestMistralAPI;
+
     QNetworkAccessManager *m_networkManager;
     QNetworkReply *m_currentReply;
     QTimer *m_timeoutTimer;

@@ -46,6 +46,7 @@ Status legend: `todo` / `in progress` / `done`
 | 16 | Usability: full menus everywhere, model button | [16-usability.md](features/16-usability.md) | done (v1.9.21) |
 | 17 | Question categories & meaningful stats | [17-categories-and-real-stats.md](features/17-categories-and-real-stats.md) | done (v1.9.22) |
 | 18 | Fun stats, badges & cover mini-stats | [18-fun-stats-badges.md](features/18-fun-stats-badges.md) | done (v2.0.3) |
+| 19 | Unit test suite (QtTest + CI gate) | [19-unit-tests.md](features/19-unit-tests.md) | done (v2.0.4) |
 
 ## Already done (do not re-implement)
 

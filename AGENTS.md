@@ -35,7 +35,13 @@ docker run --rm -it -v $(pwd):/home/sailfish/src -w /home/sailfish/src \
   mb2 -t SailfishOS-5.0.0.43-armv7hl build
 ```
 
-There is no unit test suite. Verification = the Docker build passes + manual testing on device/emulator. QML files can be hot-deployed without rebuilding: `scp qml/... nemo@<device-ip>:/usr/share/harbour-sailcat/qml/...` then restart the app.
+Unit tests live in `tests/` (QtTest, no Silica dependency — the C++ classes are pure Qt). They run in CI on plain Ubuntu Qt and block releases. Locally:
+
+```bash
+cd tests && qmake tests.pro && make && ./tst_sailcat
+```
+
+When changing `src/` behavior, extend `tests/tst_main.cpp` accordingly. QML remains manually tested: hot-deploy without rebuilding via `scp qml/... nemo@<device-ip>:/usr/share/harbour-sailcat/qml/...` then restart the app.
 
 New source files must be added to `harbour-sailcat.pro` (SOURCES/HEADERS) and new QML files to the `OTHER_FILES`/install sections. New user-visible strings must use `qsTr()`.
 
