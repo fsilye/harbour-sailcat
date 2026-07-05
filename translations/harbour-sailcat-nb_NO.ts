@@ -17,7 +17,7 @@
         </message>
         <message>
             <source>SailCat is an elegant client for Mistral AI Chat, specifically designed for Sailfish OS. Enjoy intelligent conversations with Mistral's most advanced AI models, directly from your Sailfish device.</source>
-            <translation>SailCat er en elegant klient for Mistral AI Chat, spesielt utviklet for Sailfish OS. Gled deg over intelligente samtaler med Mistrals mest avanserte AI-modeller, direkte fra din Sailfish-enhet.</translation>
+            <translation>SailCat er en elegant klient for Mistral KI-chat, spesielt utviklet for Sailfish OS. Gled deg over intelligente samtaler med Mistrals mest avanserte KI-modeller, direkte fra din Sailfish-enhet.</translation>
         </message>
         <message>
             <source>Features</source>
@@ -25,7 +25,7 @@
         </message>
         <message>
             <source>• Mistral AI free tier support</source>
-            <translation>• Støtte for Mistral AI-gratisnivå</translation>
+            <translation>• Støtte for Mistral KI-gratisnivå</translation>
         </message>
         <message>
             <source>• Real-time streaming responses</source>
@@ -136,7 +136,7 @@
         </message>
         <message>
             <source>Mistral AI is a European AI company providing state-of-the-art language models. SailCat uses their API to bring intelligent conversations to Sailfish OS.</source>
-            <translation>Mistral AI er et europeisk AI-selskap som leverer toppmoderne språkmodeller. SailCat bruker deres API for å bringe intelligente samtaler til Sailfish OS.</translation>
+            <translation>Mistral AI er et europeisk KI-selskap som leverer toppmoderne språkmodeller. SailCat bruker deres API for å bringe intelligente samtaler til Sailfish OS.</translation>
         </message>
         <message>
             <source>Privacy &amp; Storage</source>
@@ -244,7 +244,7 @@
         </message>
         <message>
             <source>Create a new conversation using the menu</source>
-            <translation>Opprett en ny samtale ved hjelp av menyen</translation>
+            <translation>Opprett en ny samtale fra menyen</translation>
         </message>
         <message>
             <source>Start chatting to create conversations</source>
@@ -309,7 +309,7 @@
         </message>
         <message>
             <source>Request timed out. Please check your connection.</source>
-            <translation>Forespørselen tidsavbrutt. Vennligst sjekk tilkoblingen din.</translation>
+            <translation>Forespørselen ble tidsavbrutt. Vennligst sjekk tilkoblingen din.</translation>
         </message>
     </context>
     <context>
@@ -388,11 +388,11 @@
         </message>
         <message>
             <source>Mistral Small (Recommended)</source>
-            <translation>Mistral Small (Anbefalt)</translation>
+            <translation>Mistral Liten (Anbefalt)</translation>
         </message>
         <message>
             <source>Mistral Large</source>
-            <translation>Mistral Large</translation>
+            <translation>Mistral Stor</translation>
         </message>
         <message>
             <source>Pixtral 12B (Vision)</source>
