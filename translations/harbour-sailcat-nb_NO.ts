@@ -659,7 +659,7 @@
         </message>
         <message>
             <source>written by AI</source>
-            <translation>skrevet av AI</translation>
+            <translation>skrevet av KI</translation>
         </message>
     </context>
     <context>
@@ -836,7 +836,7 @@
         </message>
         <message>
             <source>AI: %1 chars</source>
-            <translation>AI: %1 tegn</translation>
+            <translation>KI: %1 tegn</translation>
         </message>
         <message>
             <source>Activity by hour</source>
@@ -1056,7 +1056,7 @@
         </message>
         <message>
             <source>Top words in AI replies</source>
-            <translation>Mest brukte ord i AI-svar</translation>
+            <translation>Mest brukte ord i KI-svar</translation>
         </message>
         <message>
             <source>Wanderer</source>
